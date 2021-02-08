@@ -31,7 +31,7 @@ var durations = ds{time.Millisecond * 50, time.Millisecond * 100, time.Milliseco
 
 func TestDuration(t0 *testing.T) {
 	durations.run(t0, func(t *testing.T, duration time.Duration) {
-		ctx := featurectx.New(duration)
+		ctx := featurectx.New(duration, duration)
 		ctx.Start()
 		start := time.Now()
 		select {
@@ -44,9 +44,9 @@ func TestDuration(t0 *testing.T) {
 	})
 }
 
-func TestShouldNotDoneWithoutAStart(t0 *testing.T) {
+func TestShouldNotDoneWithoutAStartAndTheTimeoutOfStart(t0 *testing.T) {
 	durations.run(t0, func(t *testing.T, duration time.Duration) {
-		ctx := featurectx.New(duration)
+		ctx := featurectx.New(duration, duration + ADDITIONAL_TIMEOUT_WAIT_TIME + ADDITIONAL_TIMEOUT_WAIT_TIME)
 		select {
 		case <-time.After(duration + ADDITIONAL_TIMEOUT_WAIT_TIME):
 		case <-ctx.Done():
@@ -57,9 +57,9 @@ func TestShouldNotDoneWithoutAStart(t0 *testing.T) {
 
 func TestDelayStart(t0 *testing.T) {
 	durations.run(t0, func(t *testing.T, duration time.Duration) {
-		ctx := featurectx.New(duration)
-		start := time.Now()
 		startDelay := time.Millisecond * 233
+		ctx := featurectx.New(duration, startDelay + ADDITIONAL_TIMEOUT_WAIT_TIME)
+		start := time.Now()
 		go func() {
 			<-time.After(startDelay)
 			ctx.Start()
@@ -75,7 +75,7 @@ func TestDelayStart(t0 *testing.T) {
 
 func TestMultiStart(t0 *testing.T) {
 	durations.run(t0, func(t *testing.T, duration time.Duration) {
-		ctx := featurectx.New(duration)
+		ctx := featurectx.New(duration, duration)
 		start := time.Now()
 		ctx.Start()
 		go func() {
@@ -95,7 +95,7 @@ func TestMultiStart(t0 *testing.T) {
 
 func TestAbort(t0 *testing.T) {
 	durations.run(t0, func(t *testing.T, duration time.Duration) {
-		ctx := featurectx.New(duration)
+		ctx := featurectx.New(duration, duration)
 		start := time.Now()
 		ctx.Start()
 		go func() {
@@ -113,7 +113,7 @@ func TestAbort(t0 *testing.T) {
 
 func TestAbortNotStatedCtx(t0 *testing.T) {
 	durations.run(t0, func(t *testing.T, duration time.Duration) {
-		ctx := featurectx.New(duration)
+		ctx := featurectx.New(duration, duration)
 		start := time.Now()
 		go func() {
 			<-time.After(duration)
@@ -130,7 +130,7 @@ func TestAbortNotStatedCtx(t0 *testing.T) {
 
 func TestMultiAbort(t0 *testing.T) {
 	durations.run(t0, func(t *testing.T, duration time.Duration) {
-		ctx := featurectx.New(duration)
+		ctx := featurectx.New(duration, duration)
 		start := time.Now()
 		ctx.Start()
 		go func() {
@@ -144,7 +144,26 @@ func TestMultiAbort(t0 *testing.T) {
 			assert.Fail(t, "time out")
 		case <-ctx.Done():
 		}
-		assert.WithinDuration(t, start.Add(duration/3), time.Now(), MAX_DELTA_TIME, "time not match")
+		assert.WithinDuration(t, start.Add(duration/3), time.Now(), MAX_DELTA_TIME, "time not match, should be aborted at duration/3")
 		<-time.After(duration)
+	})
+}
+
+func TestStartTimeout(t0 *testing.T) {
+	durations.run(t0, func(t *testing.T, duration time.Duration) {
+		startDelay := time.Millisecond * 233
+		startTimeout := time.Millisecond * 100
+		ctx := featurectx.New(duration, startTimeout)
+		start := time.Now()
+		go func() {
+			<-time.After(startDelay)
+			ctx.Start()
+		}()
+		select {
+		case <-time.After(duration + startDelay + ADDITIONAL_TIMEOUT_WAIT_TIME):
+			assert.Fail(t, "time out")
+		case <-ctx.Done():
+		}
+		assert.WithinDuration(t, start.Add(startTimeout), time.Now(), MAX_DELTA_TIME, "time not match, should trigger timeout of start")
 	})
 }

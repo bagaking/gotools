@@ -91,9 +91,12 @@ func (ctx *ctx) ClosedAt() time.Time {
 	return ctx.createdAt
 }
 
-func New(d time.Duration) (c Context) {
+// New method returns a new featurectx.Context
+// You have the `startTimeout` to start the context, otherwise the context will be closed directly
+// After Start is called, the context will end after the `duration`
+func New(duration time.Duration, startTimeout time.Duration) (c Context) {
 	ctxNew := &ctx{
-		duration:  d,
+		duration:  duration,
 		createdAt: time.Now(),
 
 		chStart:   make(chan struct{}),
@@ -102,10 +105,16 @@ func New(d time.Duration) (c Context) {
 	}
 
 	go func() {
-		ctxNew.WaitForStart()
+		defer func() {
+			ctxNew.closedAt = time.Now()
+			close(ctxNew.chDone)
+		}()
+		select {
+		case <-time.After(startTimeout):
+			return
+		case <-ctxNew.chStart:
+		}
 		<-ctxNew.timerCtx.Done()
-		ctxNew.closedAt = time.Now()
-		close(ctxNew.chDone)
 	}()
 
 	return ctxNew
