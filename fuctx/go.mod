@@ -1,4 +1,4 @@
-module github.com/bagaking/gotools/featurectx
+module github.com/bagaking/gotools/fuctx
 
 go 1.15
 
