@@ -105,12 +105,14 @@ func New(duration time.Duration, startTimeout time.Duration) (c Context) {
 	}
 
 	go func() {
+		timer := time.NewTimer(startTimeout)
 		defer func() {
 			ctxNew.closedAt = time.Now()
 			close(ctxNew.chDone)
+			timer.Stop()
 		}()
 		select {
-		case <-time.After(startTimeout):
+		case <-timer.C:
 			return
 		case <-ctxNew.chStart:
 		}
