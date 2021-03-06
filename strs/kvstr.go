@@ -26,11 +26,23 @@ var (
 //
 // numeric: 	Any integer, floating point, or complex number
 //			  	that satisfies the go syntax
+//				e.g. `a=1,b=2.,c=.3` => {a:1, b:2, c:3}
+//
 // character: 	Any character enclosed by single-quotes `'`
-// string: 		Any character enclosed by back-quotes ```
+//				e.g. `char='x'` => {char:x}
+//
 // boolean: 	Only the value of `false` means that the value
 //				is false, in other cases you can just write key,
 //				the `=value` part can be omitted
+//				e.g. `switch,window` => {switch:true, window:true}
+//
+// string: 		Any character enclosed by back-quotes ```, or
+//				any character concatenation to the next separator
+//				that is not one of the above cases, where
+//				consecutive whitespace characters are treated as
+//				a single whitespace character
+//				e.g. `str=this   is a string,str2=`quoted string``
+//				=> {str:"this is a string", str2="`quoted string`"}
 type KVStr string
 
 // ToMap will return the result of converting kv str to map
@@ -71,7 +83,7 @@ func (kv KVStr) ForEach(fn func(key, val string)) error {
 						fn(identKey, value)
 						return nil
 					}
-					value += scanN.TokenText()
+					value += " " + scanN.TokenText()
 				}
 				fn(identKey, value)
 			default:
