@@ -1,7 +1,5 @@
-github.com/bagaking/gotools v0.0.0-20210306153536-67dd7f73bacf h1:aUNWIkpWQvXzF1bWGSoXukVluff02jiRRncASAkKXjU=
-github.com/bagaking/gotools v0.0.0-20210306153536-67dd7f73bacf/go.mod h1:oZiMaJXpa9FYjucWPFtYSdmcyC2hfdSdC/LXkQsk8b4=
-github.com/bagaking/gotools v0.0.0-20210306164324-966b23fd3316 h1:YrEvujBfr0h9fAfx153kejuBgXXdeZ0L1+EdD6Izo3s=
-github.com/bagaking/gotools v0.0.0-20210306164324-966b23fd3316/go.mod h1:oZiMaJXpa9FYjucWPFtYSdmcyC2hfdSdC/LXkQsk8b4=
+github.com/bagaking/gotools/procast v0.0.0-20210306170111-0cc0c4c277e2 h1:emPKMxhmOh7tAgUJ4fDMDHnY9UrBo/am6MtoxN8J9R8=
+github.com/bagaking/gotools/procast v0.0.0-20210306170111-0cc0c4c277e2/go.mod h1:oelPWszfXyawjxyQSKkVird/uaFout9X0rx7z7jspy8=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

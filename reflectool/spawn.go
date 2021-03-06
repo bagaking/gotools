@@ -7,10 +7,12 @@ type (
 )
 
 func NewSpawner(model interface{}) (spawner Spawner) {
-	if ty := reflect.TypeOf(model); ty.Kind() == reflect.Ptr {
-		return func() interface{} {
-			return reflect.New(reflect.ValueOf(model).Elem().Type()).Interface()
-		}
+	return NewSpawnerFromType(reflect.TypeOf(model))
+}
+
+func NewSpawnerFromType(ty reflect.Type) (spawner Spawner) {
+	if ty.Kind() == reflect.Ptr {
+		return func() interface{} { return reflect.New(ty.Elem()).Interface() } // todo: .Addr() ? test this
 	} else {
 		return func() interface{} { return reflect.New(ty).Interface() }
 	}
