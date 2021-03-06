@@ -45,12 +45,13 @@ func Conv2SnakeAndCamel(name string) (snake, camel string) {
 	return strings.Join(snakeTerms, "_"), strings.Join(camelTerms, "")
 }
 
+// Conv2PlainType takes any string str and convert it into any plain types (possibly truncated)
 func Conv2PlainType(str string, p reflect.Type) (interface{}, error) {
 	switch kind := p.Kind(); kind {
 	case reflect.String:
 		return str, nil
 	case reflect.Bool:
-		return true, nil
+		return strings.ToLower(str) != "false", nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		valI64, err := strconv.ParseInt(str, 10, 64)
 		if err != nil {
