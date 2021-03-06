@@ -1,6 +1,9 @@
 package reflectool
 
-import "reflect"
+import (
+	"github.com/bagaking/gotools/procast"
+	"reflect"
+)
 
 type (
 	forEachFieldConfig struct {
@@ -24,7 +27,9 @@ func (conf *forEachFieldConfig) OnlyExported() forEachFieldOption {
 	return func(conf *forEachFieldConfig) { conf.onlyExported = true }
 }
 
-func ForEachField(target interface{}, fn FieldHandler, options ...forEachFieldOption) error {
+func ForEachField(target interface{}, fn FieldHandler, options ...forEachFieldOption) (err error) {
+	defer procast.Recover(func(e error) { err = e }, "foreach execute failed")
+
 	conf := (&forEachFieldConfig{}).pipe(options)
 
 	r := reflect.ValueOf(target)
@@ -36,8 +41,7 @@ func ForEachField(target interface{}, fn FieldHandler, options ...forEachFieldOp
 	for i := 0; i < elem.NumField(); i++ {
 		field, fieldType := elem.Field(i), rType.Field(i)
 
-		if conf.onlyExported && fieldType.PkgPath != "" {
-			// skip all unexported fields, @see go/src/reflect/type.go#reflect.StructField
+		if conf.onlyExported && IsFieldExported(fieldType) {
 			continue
 		}
 
