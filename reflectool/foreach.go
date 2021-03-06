@@ -1,8 +1,9 @@
 package reflectool
 
 import (
-	"github.com/bagaking/gotools/procast"
 	"reflect"
+
+	"github.com/bagaking/gotools/procast"
 )
 
 type (

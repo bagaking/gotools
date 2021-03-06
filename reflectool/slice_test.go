@@ -1,6 +1,7 @@
 package reflectool
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -110,4 +111,14 @@ func TestIterator_WriteToWithMapAndReduce(t *testing.T) {
 	)
 	assert.Nil(t, err, "set to pointer of slice should be ok")
 	assert.Equal(t, 55, ret[0], "value should be sum of values")
+}
+
+func TestGetSliceElementType(t *testing.T) {
+	a := make([]int, 0, 10)
+	ty, err := GetSliceElementType(a)
+	assert.Nil(t, err)
+	assert.Equal(t, ty, reflect.TypeOf(0))
+	ty, err = GetSliceElementType(&a)
+	assert.Nil(t, err)
+	assert.Equal(t, ty, reflect.TypeOf(0))
 }

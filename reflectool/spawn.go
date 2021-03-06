@@ -1,6 +1,8 @@
 package reflectool
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type (
 	Spawner func() interface{}

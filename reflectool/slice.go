@@ -18,17 +18,14 @@ func (itr Iterator) Next() (interface{}, error) {
 	return itr()
 }
 
-func (itr Iterator) WriteTo(slice interface{}, handler ...interface{}) (err error) {
+func (itr Iterator) WriteTo(slicePointer interface{}, handler ...interface{}) (err error) {
 	defer procast.Recover(func(e error) { err = e }, "iterator execute failed")
 
-	vSlicePtr := reflect.ValueOf(slice)
-	if vSlicePtr.Kind() != reflect.Ptr {
-		return fmt.Errorf("invalid arguments, out val should be a pointer of slice %v", vSlicePtr.Type())
+	vSlice, err := ToWriteableSliceValue(slicePointer)
+	if err != nil {
+		return fmt.Errorf("input error, %w", err)
 	}
-	vSlice := vSlicePtr.Elem()
-	if vSlice.Kind() != reflect.Slice {
-		return fmt.Errorf("invalid arguments, out val should be a pointer of slice %v", vSlice.Type())
-	}
+
 	vNewSlice := reflect.MakeSlice(vSlice.Type(), 0, vSlice.Cap())
 
 	var mapper ItrMapper
@@ -74,4 +71,28 @@ func (itr Iterator) WriteTo(slice interface{}, handler ...interface{}) (err erro
 	}
 	vSlice.Set(vNewSlice)
 	return nil
+}
+
+func ToWriteableSliceValue(slicePointer interface{}) (*reflect.Value, error) {
+	vSlicePtr := reflect.ValueOf(slicePointer)
+	// to make sure it are addressable
+	if vSlicePtr.Kind() != reflect.Ptr {
+		return nil, fmt.Errorf("invalid arguments, out val should be a pointer of slice %v", vSlicePtr.Type())
+	}
+	vSlice := vSlicePtr.Elem()
+	if vSlice.Kind() != reflect.Slice {
+		return nil, fmt.Errorf("invalid arguments, out val should be a pointer of slice %v", vSlice.Type())
+	}
+	return &vSlice, nil
+}
+
+func GetSliceElementType(slice interface{}) (reflect.Type, error) {
+	ty := reflect.TypeOf(slice)
+	if ty.Kind() == reflect.Ptr {
+		ty = ty.Elem()
+	}
+	if ty.Kind() != reflect.Slice {
+		return nil, fmt.Errorf("invalid arguments, out val should be a pointer of slice %v", ty)
+	}
+	return ty.Elem(), nil
 }

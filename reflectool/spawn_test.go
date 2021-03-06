@@ -1,8 +1,9 @@
 package reflectool
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewSpawner(t *testing.T) {
@@ -16,7 +17,6 @@ func TestNewSpawner(t *testing.T) {
 	assert.True(t, ok, "type error")
 	assert.Equal(t, s, *x, "spawn error")
 }
-
 
 func TestNewSpawnerPlain(t *testing.T) {
 	s := 1
