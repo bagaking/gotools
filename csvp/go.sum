@@ -1,0 +1,6 @@
+github.com/bagaking/gotools/annotation v0.0.0-20210306050452-9f21ac57c0b1 h1:GPTx97gH0/pKwHZayhLJ0/u/FnsDZBgnWWwhxRcbtZY=
+github.com/bagaking/gotools/annotation v0.0.0-20210306050452-9f21ac57c0b1/go.mod h1:Apt2oNzylk//3RhCX0dEBju7sHNRay9IxBay5kIGr7I=
+github.com/bagaking/gotools/reflectool v0.0.1 h1:oTx6/GmLl9yEzxzFk33YzK+mMZr26wSgYFYYOdVbIwY=
+github.com/bagaking/gotools/reflectool v0.0.1/go.mod h1:8S03Lgjo/ndbna6MEHndqe4huiWsUK9Oce/nlXgsJTk=
+github.com/bagaking/gotools/strs v0.0.1 h1:zvMiKP/jv8Zq+B0W7KV9uaT5sufX0aZ2XjN2mYWsQbc=
+github.com/bagaking/gotools/strs v0.0.1/go.mod h1:APZlUIjQHX/te3SKa8ONwvgvGncn1o1Drcno1P/7p+k=
