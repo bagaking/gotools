@@ -49,3 +49,65 @@ func TestIterator_WriteToPtr(t *testing.T) {
 		assert.Equal(t, val, *ret[i], "value of item %d should be %v", i, val)
 	}
 }
+
+func TestIterator_WriteToWithMap(t *testing.T) {
+	i := 0
+
+	type c struct {
+		Val int
+	}
+
+	itr := func() (interface{}, error) {
+		i++
+		if i > 10 {
+			return nil, nil
+		}
+		return i, nil
+	}
+	ret := make([]*c, 0, 10)
+	err := Iterator(itr).WriteTo(&ret, ItrMapper(func(in interface{}) (interface{}, error) { return &c{in.(int)}, nil }))
+	assert.Nil(t, err, "set to pointer of slice should be ok")
+	for i := 0; i < 10; i++ {
+		val := c{i + 1}
+		assert.Equal(t, val, *ret[i], "value of item %d should be %v", i, val)
+	}
+}
+
+func TestIterator_WriteToWithReduce(t *testing.T) {
+	i := 0
+
+	itr := func() (interface{}, error) {
+		i++
+		if i > 10 {
+			return nil, nil
+		}
+		return i, nil
+	}
+	ret := make([]int, 0, 10)
+	err := Iterator(itr).WriteTo(&ret, ItrReducer(func(a interface{}, b interface{}) (interface{}, error) { return a.(int) + b.(int), nil }))
+	assert.Nil(t, err, "set to pointer of slice should be ok")
+	assert.Equal(t, 55, ret[0], "value should be sum of values")
+}
+
+func TestIterator_WriteToWithMapAndReduce(t *testing.T) {
+	i := 0
+
+	type c struct {
+		Val int
+	}
+
+	itr := func() (interface{}, error) {
+		i++
+		if i > 10 {
+			return nil, nil
+		}
+		return &c{i}, nil
+	}
+	ret := make([]int, 0, 10)
+	err := Iterator(itr).WriteTo(&ret,
+		ItrMapper(func(in interface{}) (interface{}, error) { return in.(*c).Val, nil }),
+		ItrReducer(func(a interface{}, b interface{}) (interface{}, error) { return a.(int) + b.(int), nil }),
+	)
+	assert.Nil(t, err, "set to pointer of slice should be ok")
+	assert.Equal(t, 55, ret[0], "value should be sum of values")
+}
