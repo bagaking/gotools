@@ -1,6 +1,7 @@
 package reflectool
 
 import (
+	"io"
 	"reflect"
 	"testing"
 
@@ -111,6 +112,26 @@ func TestIterator_WriteToWithMapAndReduce(t *testing.T) {
 	)
 	assert.Nil(t, err, "set to pointer of slice should be ok")
 	assert.Equal(t, 55, ret[0], "value should be sum of values")
+}
+
+func TestIterator_WriteToWithExitValidator(t *testing.T) {
+	i := 0
+
+	itr := func() (interface{}, error) {
+		i++
+		if i > 10 {
+			return nil, io.EOF
+		}
+		return i, nil
+	}
+	ret := make([]int, 0, 10)
+	err := Iterator(itr).WriteTo(&ret, ItrExitValidator(func(iv interface{}, err error) (bool, error) {
+		if err == io.EOF {
+			return true, nil
+		}
+		return false, err
+	}))
+	assert.Nil(t, err, "should exit correctly when io.EOF got")
 }
 
 func TestGetSliceElementType(t *testing.T) {

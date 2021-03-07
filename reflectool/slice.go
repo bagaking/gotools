@@ -10,12 +10,17 @@ import (
 type (
 	Iterator func() (interface{}, error)
 
-	ItrMapper  func(iv interface{}) (interface{}, error)
-	ItrReducer func(iv interface{}, in interface{}) (interface{}, error)
+	ItrMapper        func(iv interface{}) (interface{}, error)
+	ItrReducer       func(iv interface{}, in interface{}) (interface{}, error)
+	ItrExitValidator func(iv interface{}, err error) (bool, error)
 )
 
 func (itr Iterator) Next() (interface{}, error) {
 	return itr()
+}
+
+func defaultExitValidator(iv interface{}, err error) (bool, error) {
+	return iv == nil, err
 }
 
 func (itr Iterator) WriteTo(slicePointer interface{}, handler ...interface{}) (err error) {
@@ -30,21 +35,27 @@ func (itr Iterator) WriteTo(slicePointer interface{}, handler ...interface{}) (e
 
 	var mapper ItrMapper
 	var reducer ItrReducer
+	// default exit validator
+	var exitValidator ItrExitValidator = defaultExitValidator
 	for _, h := range handler {
 		switch t := h.(type) {
 		case ItrMapper:
 			mapper = t
 		case ItrReducer:
 			reducer = t
+		case ItrExitValidator:
+			exitValidator = t
 		}
 	}
 
 	for {
 		v, err := itr.Next()
+
+		exit, err := exitValidator(v, err)
 		if err != nil {
 			return fmt.Errorf("itr failed, %w", err)
 		}
-		if v == nil {
+		if exit {
 			break
 		}
 
