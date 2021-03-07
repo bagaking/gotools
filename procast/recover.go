@@ -23,5 +23,4 @@ func Recover(handler func(err error), format string, args ...interface{}) {
 			handler(fmt.Errorf("%s, %v", str, r))
 		}
 	}
-
 }

@@ -2,6 +2,7 @@ package csvp
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"sync"
 	"time"
@@ -11,23 +12,57 @@ import (
 	"github.com/bagaking/gotools/strs"
 )
 
-type CSVAnnotation struct {
+type ColAnnotation struct {
 	Col    int
 	Parser string
 	Param  string
 }
 
-func (CSVAnnotation) TagName() string {
+func (ColAnnotation) TagName() string {
 	return "csv"
 }
 
 var (
 	once        = sync.Once{}
 	csvAnStruct *annotation.StructAnnotations
-	template    = CSVAnnotation{}
+	template    = ColAnnotation{}
 )
 
-func ParseLine(data interface{}, line []string) (err error) {
+func ParseByCol(outSlicePointer interface{}, reader LineReader) error {
+	itr := func() (line interface{}, err error) { return reader.Read() }
+
+	elemType, err := reflectool.GetSliceElementType(outSlicePointer)
+	if err != nil {
+		return fmt.Errorf("invalid input, %w", err)
+	}
+
+	elemSpawner := reflectool.NewSpawnerFromType(elemType)
+	mapper := func(in interface{}) (interface{}, error) {
+		line, ok := in.([]string)
+		if !ok {
+			return nil, fmt.Errorf("invalid input %v", in)
+		}
+		v := elemSpawner.Spawn()
+
+		if e := ParseLineByCol(v, line); e != nil {
+			return nil, e
+		}
+		return v, nil
+	}
+	csvReaderExitValidator := func(iv interface{}, err error) (bool, error) {
+		if err == io.EOF {
+			return true, nil
+		}
+		return false, err
+	}
+
+	return reflectool.Iterator(itr).WriteTo(outSlicePointer,
+		reflectool.ItrMapper(mapper),
+		reflectool.ItrExitValidator(csvReaderExitValidator),
+	)
+}
+
+func ParseLineByCol(data interface{}, line []string) (err error) {
 	if csvAnStruct == nil {
 		holder, err := annotation.Analyze(data, template)
 		if err != nil {
@@ -44,7 +79,7 @@ func ParseLine(data interface{}, line []string) (err error) {
 			return nil
 		}
 
-		aCSV := a.(*CSVAnnotation)
+		aCSV := a.(*ColAnnotation)
 		valStr := line[aCSV.Col]
 		var value interface{}
 		parser := aCSV.Parser
@@ -63,7 +98,6 @@ func ParseLine(data interface{}, line []string) (err error) {
 			return err
 		}
 		field.Set(reflect.ValueOf(value))
-		fmt.Println(fieldType.Name, value)
 
 		return nil
 	}); err != nil {
