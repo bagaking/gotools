@@ -26,7 +26,8 @@ var (
 //
 // numeric: 	Any integer, floating point, or complex number
 //			  	that satisfies the go syntax
-//				e.g. `a=1,b=2.,c=.3` => {a:1, b:2, c:3}
+//				e.g. `a=1,b=2.,c=.3,d=01 ,e=10e2`
+//				=> {a:1, b:2, c:.3, d:01, e:10e2}
 //
 // character: 	Any character enclosed by single-quotes `'`
 //				e.g. `char='x'` => {char:x}
@@ -75,15 +76,24 @@ func (kv KVStr) ForEach(fn func(key, val string)) error {
 		switch tokenType {
 		case '=':
 			switch token := scanN.Scan(); token {
-			case scanner.Ident, scanner.String, scanner.Int, scanner.RawString:
+			case scanner.Ident, scanner.Char, scanner.String, scanner.Int, scanner.Float, scanner.RawString:
 				value := scanN.TokenText()
+				prevWord, prevPos := value, scanN.Position
 
 				for next := scanN.Scan(); next != ',' && next != ';'; next = scanN.Scan() {
 					if next == scanner.EOF {
 						fn(identKey, value)
 						return nil
 					}
-					value += " " + scanN.TokenText()
+					if scanN.Offset-prevPos.Offset > len(prevWord) {
+						prevWord = scanN.TokenText()
+						value += " " + prevWord
+						continue
+					} else {
+						prevWord = scanN.TokenText()
+						value += prevWord
+					}
+					prevPos = scanN.Position
 				}
 				fn(identKey, value)
 			default:

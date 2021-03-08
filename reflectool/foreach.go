@@ -42,7 +42,7 @@ func ForEachField(target interface{}, fn FieldHandler, options ...forEachFieldOp
 	for i := 0; i < elem.NumField(); i++ {
 		field, fieldType := elem.Field(i), rType.Field(i)
 
-		if conf.onlyExported && IsFieldExported(fieldType) {
+		if conf.onlyExported && !IsFieldExported(fieldType) {
 			continue
 		}
 

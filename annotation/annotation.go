@@ -64,7 +64,7 @@ func Analyze(prototype interface{}, annotations ...IAnnotation) (*StructAnnotati
 			ret.Field2Annotations[fieldType.Name][tagName] = anData
 		}
 		return nil
-	}); err != nil {
+	}, reflectool.ForEachFieldOptions.OnlyExported()); err != nil {
 		return nil, err
 	}
 
