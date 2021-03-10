@@ -8,6 +8,7 @@ import (
 
 func TestKVStr_ToMap(t *testing.T) {
 	ret, err := KVStr("a=1,b=2.2,c=.3,d= 10e2,e =07 ,f = 0xAB2,g = ss ss, h= this is a str ,i=this is a string,j=`this is another one`,k=this-is-a-string; l='c',m='\\t',n='\\n', true").ToMap()
+
 	assert.Nil(t, err)
 	assert.Equal(t, "1", ret["a"])
 	assert.Equal(t, "2.2", ret["b"])
