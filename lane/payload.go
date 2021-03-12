@@ -1,8 +1,25 @@
 package lane
 
-import "fmt"
+import (
+	"errors"
+)
 
 type Payload string
+
+type Payloads struct {
+	Ver      int            `json:"v,omitempty"`
+	Contents map[Tag]string `json:"c"`
+}
+
+var ErrCandidatesNotMatch = errors.New("cannot match any candidates")
+
+func (p Payload) String() string {
+	return string(p)
+}
+
+func (p Payload) Is(v string) bool {
+	return p.String() == v
+}
 
 func (p Payload) In(list ...string) bool {
 	n := len(list)
@@ -10,7 +27,7 @@ func (p Payload) In(list ...string) bool {
 		return false
 	}
 	for i := 0; i < n; i++ {
-		if list[i] == string(p) {
+		if list[i] == p.String() {
 			return true
 		}
 	}
@@ -18,9 +35,9 @@ func (p Payload) In(list ...string) bool {
 }
 
 func (p Payload) Select(candidates map[string]string) (string, error) {
-	ret, ok := candidates[string(p)]
+	ret, ok := candidates[p.String()]
 	if !ok {
-		return "", fmt.Errorf("cannot find any candidates= %s", p)
+		return "", ErrCandidatesNotMatch
 	}
 	return ret, nil
 }
