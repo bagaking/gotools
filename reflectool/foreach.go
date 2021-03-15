@@ -1,6 +1,7 @@
 package reflectool
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/bagaking/gotools/procast"
@@ -9,23 +10,42 @@ import (
 type (
 	forEachFieldConfig struct {
 		onlyExported bool
+		drillLevel   int
+		// runtime val for drill
+		visited map[reflect.Value]bool
+		prefix  string
 	}
 	forEachFieldOption func(conf *forEachFieldConfig)
 
-	FieldHandler func(field *reflect.Value, fieldType reflect.StructField) error
+	FieldContext struct {
+		Value *reflect.Value
+		reflect.StructField
+		Path string
+	}
+
+	FieldHandler func(ctx FieldContext) error
 )
 
 var ForEachFieldOptions = &forEachFieldConfig{}
 
-func (conf *forEachFieldConfig) pipe(options []forEachFieldOption) *forEachFieldConfig {
+func (*forEachFieldConfig) pipe(options []forEachFieldOption) *forEachFieldConfig {
+	conf := &forEachFieldConfig{}
 	for _, fn := range options {
 		fn(conf)
 	}
 	return conf
 }
 
-func (conf *forEachFieldConfig) OnlyExported() forEachFieldOption {
+func (*forEachFieldConfig) OnlyExported() forEachFieldOption {
 	return func(conf *forEachFieldConfig) { conf.onlyExported = true }
+}
+
+func (*forEachFieldConfig) Drill(level int) forEachFieldOption {
+	return func(conf *forEachFieldConfig) { conf.drillLevel = level }
+}
+
+func (*forEachFieldConfig) Override(fn func(cfg *forEachFieldConfig)) forEachFieldOption {
+	return func(conf *forEachFieldConfig) { fn(conf) }
 }
 
 func ForEachField(target interface{}, fn FieldHandler, options ...forEachFieldOption) (err error) {
@@ -33,7 +53,13 @@ func ForEachField(target interface{}, fn FieldHandler, options ...forEachFieldOp
 
 	conf := (&forEachFieldConfig{}).pipe(options)
 
-	r := reflect.ValueOf(target)
+	var r reflect.Value
+	if v, ok := target.(reflect.Value); ok {
+		r = v
+	} else {
+		r = reflect.ValueOf(target)
+	}
+
 	elem := r
 	if r.Kind() == reflect.Ptr {
 		elem = r.Elem()
@@ -46,8 +72,30 @@ func ForEachField(target interface{}, fn FieldHandler, options ...forEachFieldOp
 			continue
 		}
 
-		if err := fn(&field, fieldType); err != nil {
+		fieldCtx := FieldContext{
+			StructField: fieldType,
+			Value:       &field,
+			Path:        fmt.Sprintf("%s.%s", conf.prefix, fieldType.Name),
+		}
+		// even the field is a structure to drill, the fn will be performed
+		if err := fn(fieldCtx); err != nil {
 			return err
+		}
+
+		if conf.drillLevel != 0 {
+			if field.Kind() == reflect.Ptr {
+				field = field.Elem()
+			}
+			if field.Kind() == reflect.Struct {
+				if err := ForEachField(field, fn, conf.Override(func(cfg *forEachFieldConfig) {
+					cfg.onlyExported = conf.onlyExported
+					cfg.drillLevel = conf.drillLevel - 1
+					cfg.visited = conf.visited
+					cfg.prefix = fieldCtx.Path
+				})); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil

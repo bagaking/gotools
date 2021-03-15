@@ -79,13 +79,7 @@ func Conv2PlainType(str string, p reflect.Type) (interface{}, error) {
 		}
 		return float32(valF64), nil
 	case reflect.Complex64:
-		valC64, err := strconv.ParseComplex(str, 10)
-		if err != nil {
-			return nil, err
-		}
-		return complex64(valC64), nil
-	case reflect.Complex128:
-		return strconv.ParseComplex(str, 10)
+		return nil, errors.New("complex value are not supported")
 	default:
 		// reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct, reflect.UnsafePointer, reflect.Uintptr:
 		return nil, errors.New("unsupported type")

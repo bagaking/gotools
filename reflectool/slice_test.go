@@ -143,3 +143,47 @@ func TestGetSliceElementType(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, ty, reflect.TypeOf(0))
 }
+
+func TestNewSlicePtrReflector(t *testing.T) {
+	// receive plain value
+	a := []int{1, 2, 3, 4, 5, 6}
+	sp, err := NewSlicePtrReflector(&a)
+	assert.Nil(t, err)
+
+	assert.Equal(t, sp.ItemType(), reflect.TypeOf(1))
+
+	xx := 0
+	err = sp.Read(1, &xx)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, xx)
+
+	// receive elem
+	type St struct{ v int }
+	b := []St{{1}, {2}}
+	sp, err = NewSlicePtrReflector(&b)
+	assert.Nil(t, err)
+	assert.Equal(t, sp.ItemType(), reflect.TypeOf(St{}))
+	yy := St{}
+	err = sp.Read(1, &yy)
+	assert.Nil(t, err)
+	assert.Equal(t, St{2}, yy)
+	yyy := &St{}
+	err = sp.Read(1, yyy)
+	assert.Nil(t, err)
+	assert.Equal(t, St{2}, *yyy)
+
+	// receive pointer
+	c := []*St{{1}, {2}}
+	sp, err = NewSlicePtrReflector(&c)
+	assert.Nil(t, err)
+	assert.Equal(t, sp.ItemType(), reflect.TypeOf(&St{}))
+	zz := St{}
+	err = sp.Read(1, &zz)
+	assert.Nil(t, err)
+	assert.Equal(t, St{2}, zz)
+	zzz := &St{}
+	err = sp.Read(1, zzz)
+	assert.Nil(t, err)
+	assert.Equal(t, c[1], zzz)
+}
