@@ -1,8 +1,6 @@
 package annotation
 
 import (
-	"reflect"
-
 	"github.com/bagaking/gotools/reflectool"
 	"github.com/bagaking/gotools/strs"
 )
@@ -16,8 +14,7 @@ type (
 
 	StructAnnotations struct {
 		Spawners          map[string]reflectool.Spawner
-		Field2Annotations map[string]AnnMap // field => annotation_name => annotation
-		Setter            func(val interface{}, desc IAnnotation) (interface{}, error)
+		Field2Annotations map[string]AnnMap // field path => annotation name => annotation instance
 	}
 )
 
@@ -47,10 +44,10 @@ func Analyze(prototype interface{}, annotations ...IAnnotation) (*StructAnnotati
 		ret.Spawners[annotation.TagName()] = reflectool.NewSpawner(annotation)
 	}
 
-	if err := reflectool.ForEachField(prototype, func(field *reflect.Value, fieldType reflect.StructField) error {
+	if err := reflectool.ForEachField(prototype, func(fCtx reflectool.FieldContext) error {
 		for _, annotation := range annotations {
 			tagName := annotation.TagName()
-			tagContent, ok := fieldType.Tag.Lookup(tagName)
+			tagContent, ok := fCtx.Tag.Lookup(tagName)
 			if !ok {
 				return nil
 			}
@@ -58,13 +55,16 @@ func Analyze(prototype interface{}, annotations ...IAnnotation) (*StructAnnotati
 			if err := ExtractFromTag(anData, tagContent); err != nil {
 				return err
 			}
-			if ret.Field2Annotations[fieldType.Name] == nil {
-				ret.Field2Annotations[fieldType.Name] = make(AnnMap)
+			if ret.Field2Annotations[fCtx.Path] == nil {
+				ret.Field2Annotations[fCtx.Path] = make(AnnMap)
 			}
-			ret.Field2Annotations[fieldType.Name][tagName] = anData
+			ret.Field2Annotations[fCtx.Path][tagName] = anData
 		}
 		return nil
-	}, reflectool.ForEachFieldOptions.OnlyExported()); err != nil {
+	},
+		reflectool.ForEachFieldOptions.OnlyExported(),
+		reflectool.ForEachFieldOptions.Drill(-1),
+	); err != nil {
 		return nil, err
 	}
 
