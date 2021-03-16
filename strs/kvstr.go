@@ -135,28 +135,31 @@ func (kv KVStr) ReflectTo(target interface{}) (extra map[string]string, err erro
 		return nil, fmt.Errorf("format error, %w", err)
 	}
 
-	var reflector reflectool.FieldHandler = func(field *reflect.Value, fieldType reflect.StructField) error {
-		v, ok := kvMap[fieldType.Name]
+	var reflector reflectool.FieldHandler = func(fCtx reflectool.FieldContext) error {
+		v, ok := kvMap[fCtx.Name]
 		if !ok {
-			snake := Conv2Snake(fieldType.Name)
+			snake := Conv2Snake(fCtx.Name)
 			v, ok = kvMap[snake]
 			if !ok {
 				return nil
 			}
 		}
 
-		converted, err := Conv2PlainType(v, field.Type())
+		converted, err := Conv2PlainType(v, fCtx.Type)
 		if err != nil {
 			return err
 		}
 
 		val := reflect.ValueOf(converted)
-		field.Set(val)
-		delete(kvMap, fieldType.Name) // todo: check this
+		fCtx.Value.Set(val)
+		delete(kvMap, fCtx.Name) // todo: check this
 		return nil
 	}
 
-	if err := reflectool.ForEachField(target, reflector); err != nil {
+	if err := reflectool.ForEachField(target, reflector,
+		reflectool.ForEachFieldOptions.OnlyExported(),
+		reflectool.ForEachFieldOptions.Drill(-1),
+	); err != nil {
 		return nil, fmt.Errorf("reflect error, %w", err)
 	}
 
