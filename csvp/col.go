@@ -73,8 +73,8 @@ func ParseLineByCol(data interface{}, line []string) (err error) {
 		})
 	}
 
-	if err = reflectool.ForEachField(data, func(field *reflect.Value, fieldType reflect.StructField) error {
-		a := csvAnStruct.Get(fieldType.Name, template.TagName())
+	if err = reflectool.ForEachField(data, func(fCtx reflectool.FieldContext) error {
+		a := csvAnStruct.Get(fCtx.Path, template.TagName())
 		if a == nil {
 			return nil
 		}
@@ -85,7 +85,7 @@ func ParseLineByCol(data interface{}, line []string) (err error) {
 		parser := aCSV.Parser
 		switch {
 		case "" == parser || strs.StartsWith(parser, "plain"):
-			value, err = strs.Conv2PlainType(valStr, fieldType.Type)
+			value, err = strs.Conv2PlainType(valStr, fCtx.Type)
 		case strs.StartsWith(parser, "time"):
 			if aCSV.Param == "" {
 				value, err = time.Parse(time.RFC3339, valStr)
@@ -97,10 +97,13 @@ func ParseLineByCol(data interface{}, line []string) (err error) {
 		if err != nil {
 			return err
 		}
-		field.Set(reflect.ValueOf(value))
+		fCtx.Value.Set(reflect.ValueOf(value))
 
 		return nil
-	}); err != nil {
+	},
+		reflectool.ForEachFieldOptions.OnlyExported(),
+		reflectool.ForEachFieldOptions.Drill(-1),
+	); err != nil {
 		return err
 	}
 

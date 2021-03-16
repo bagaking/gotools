@@ -12,9 +12,13 @@ func TestParse(t *testing.T) {
 	csvStr := `a,100,10e2,"s 1"
 b,200,.05,"s 2"
 `
+	type XX struct {
+		V1 string `csv:"col=0"`
+		V2 int    `csv:"col=1"`
+	}
+
 	type C struct {
-		V1 string  `csv:"col=0"`
-		V2 int     `csv:"col=1"`
+		XX
 		V3 float32 `csv:"col=2"`
 		V4 string  `csv:"col=3"`
 	}
@@ -25,6 +29,6 @@ b,200,.05,"s 2"
 	err := ParseByCol(&ret, reader)
 
 	assert.Nil(t, err)
-	assert.Equal(t, *ret[0], C{"a", 100, 10e2, "s 1"})
-	assert.Equal(t, *ret[1], C{"b", 200, 0.05, "s 2"})
+	assert.Equal(t, *ret[0], C{XX{"a", 100}, 10e2, "s 1"})
+	assert.Equal(t, *ret[1], C{XX{"b", 200}, 0.05, "s 2"})
 }
