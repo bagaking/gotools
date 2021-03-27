@@ -1,8 +1,8 @@
 package annotation
 
 import (
+	"github.com/bagaking/gotools/annotation/kvstr"
 	"github.com/bagaking/gotools/reflectool"
-	"github.com/bagaking/gotools/strs"
 )
 
 type (
@@ -19,7 +19,7 @@ type (
 )
 
 func ExtractFromTag(annotate IAnnotation, tag string) error {
-	_, err := strs.KVStr(tag).ReflectTo(annotate)
+	_, err := kvstr.KVStr(tag).ReflectTo(annotate)
 	return err
 }
 

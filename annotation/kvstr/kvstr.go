@@ -1,4 +1,4 @@
-package strs
+package kvstr
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 	"text/scanner"
 
 	"github.com/bagaking/gotools/reflectool"
+	"github.com/bagaking/gotools/strs"
 )
 
 var (
@@ -136,16 +137,16 @@ func (kv KVStr) ReflectTo(target interface{}) (extra map[string]string, err erro
 	}
 
 	var reflector reflectool.FieldHandler = func(fCtx reflectool.FieldContext) error {
-		v, ok := kvMap[fCtx.Name]
+		str, ok := kvMap[fCtx.Name]
 		if !ok {
-			snake := Conv2Snake(fCtx.Name)
-			v, ok = kvMap[snake]
+			snake := strs.Conv2Snake(fCtx.Name)
+			str, ok = kvMap[snake]
 			if !ok {
 				return nil
 			}
 		}
 
-		converted, err := Conv2PlainType(v, fCtx.Type)
+		converted, err := ConvStrToPlainType(str, fCtx.Type)
 		if err != nil {
 			return err
 		}
@@ -165,3 +166,4 @@ func (kv KVStr) ReflectTo(target interface{}) (extra map[string]string, err erro
 
 	return kvMap, nil
 }
+

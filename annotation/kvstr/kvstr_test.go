@@ -1,4 +1,4 @@
-package strs
+package kvstr
 
 import (
 	"testing"
