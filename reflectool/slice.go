@@ -80,3 +80,16 @@ func GetSliceElementType(slice interface{}) (reflect.Type, error) {
 	}
 	return ty.Elem(), nil
 }
+
+func SliceContains(slice interface{}, target interface{}) bool {
+	val := reflect.ValueOf(slice)
+	if val.Kind() != reflect.Slice {
+		return false
+	}
+	for i := 0; i < val.Len(); i++ {
+		if target == val.Index(i).Interface() {
+			return true
+		}
+	}
+	return false
+}

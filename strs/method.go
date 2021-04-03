@@ -8,7 +8,7 @@ func StartsWith(str string, prefix string) bool {
 	return str[:lenPref] == prefix
 }
 
-func EndsWith(str string,suffix string) bool {
+func EndsWith(str string, suffix string) bool {
 	n := len(str) - len(suffix)
 	if n < 0 {
 		return false

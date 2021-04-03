@@ -48,7 +48,7 @@ func TestKVStr_ReflectTo(t *testing.T) {
 }
 
 func TestKVStr_ForEach(t *testing.T) {
-	result := []struct{
+	result := []struct {
 		k string
 		v string
 	}{
@@ -60,7 +60,6 @@ func TestKVStr_ForEach(t *testing.T) {
 	KVStr("a=1,b=2.2,c=ok").ForEach(func(k, v string) {
 		assert.Equal(t, result[count].k, k)
 		assert.Equal(t, result[count].v, v)
-		count ++
-
+		count++
 	})
 }

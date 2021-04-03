@@ -41,4 +41,3 @@ func Conv2SnakeAndCamel(name string) (snake, camel string) {
 
 	return strings.Join(snakeTerms, "_"), strings.Join(camelTerms, "")
 }
-
