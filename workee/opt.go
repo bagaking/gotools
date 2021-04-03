@@ -7,7 +7,7 @@ type (
 		TickDuration time.Duration
 		InitStrategy InitStrategy
 		ErrorHandler func(err error)
-		ProcPrinter  func(w *Worker, str string, round int64)
+		ProcPrinter  func(w Workee, str string, round int64)
 	}
 
 	Option func(c conf) conf
@@ -34,7 +34,7 @@ func WithErrorHandler(fn func(err error)) Option {
 	}
 }
 
-func WithProcPrinter(fn func(w *Worker, str string, round int64)) Option {
+func WithProcPrinter(fn func(w Workee, str string, round int64)) Option {
 	return func(c conf) conf {
 		c.ProcPrinter = fn
 		return c

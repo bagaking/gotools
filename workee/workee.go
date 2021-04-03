@@ -1,6 +1,8 @@
 package workee
 
 import (
+	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -10,15 +12,26 @@ import (
 type (
 	InitStrategy byte
 
-	Worker struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+	Workee interface {
+		Name() string
+		ID() string
+		Close()
+		IsFinished() bool
+	}
+
+	worker struct {
+		id       string
+		name     string
+		finished bool
+
 		conf
 
 		chClose   chan struct{}
 		watchOnce *sync.Once
 	}
 )
+
+var _ Workee = &worker{}
 
 const (
 	InitAtLeastOnce InitStrategy = 0
@@ -33,31 +46,45 @@ var DefaultConf = conf{
 	TickDuration: time.Second,
 	InitStrategy: InitAtLeastOnce,
 	ErrorHandler: func(err error) {},
-	ProcPrinter:  func(w *Worker, str string, round int64) {},
+	ProcPrinter:  func(w Workee, str string, round int64) {},
 }
 
-func New(name string, fn func() error, opts ...Option) *Worker {
+func New(name string, fn func() error, opts ...Option) Workee {
 	c := DefaultConf
 	for _, opt := range opts {
 		c = opt(c)
 	}
-	worker := &Worker{
+	worker := &worker{
 		conf:      c,
 		chClose:   make(chan struct{}),
 		watchOnce: &sync.Once{},
 	}
-	worker.Name = name
+	worker.name = name
+	rand.Seed(time.Now().UnixNano())
+	worker.id = fmt.Sprintf("%d-%d", rand.Uint64(), time.Now().UnixNano())
 	worker.watchOnce.Do(func() {
 		worker.start(fn)
 	})
 	return worker
 }
 
-func (w *Worker) Close() {
+func (w *worker) Name() string {
+	return w.name
+}
+
+func (w *worker) ID() string {
+	return w.id
+}
+
+func (w *worker) IsFinished() bool {
+	return w.finished
+}
+
+func (w *worker) Close() {
 	close(w.chClose)
 }
 
-func (w *Worker) start(fn func() error) {
+func (w *worker) start(fn func() error) {
 	wait, exit := AtLeastOnce()
 	w.ProcPrinter(w, StrWorkeeStart, 0)
 
@@ -79,10 +106,12 @@ func (w *Worker) start(fn func() error) {
 			defer procast.Recover(w.ErrorHandler, "!!! panic")
 			err := fn()
 			exit()
-			if w.ErrorHandler != nil {
+			if err != nil && w.ErrorHandler != nil {
 				w.ErrorHandler(err)
 			}
 		}, w.chClose)
+
+		w.finished = true
 	}()
 	wait()
 }
