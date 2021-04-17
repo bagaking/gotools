@@ -28,4 +28,8 @@ func main() {
 			break
 		}
 	}
+
+	for k, v := range sr.GetChildrenTable() {
+		fmt.Println("=", k, v)
+	}
 }

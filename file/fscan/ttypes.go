@@ -39,5 +39,6 @@ type (
 		RangeDirs(fn func(pth string, se IScanEntry) error) error
 
 		WarmUp()
+		GetChildrenTable() map[string][]string
 	}
 )

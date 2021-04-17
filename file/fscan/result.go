@@ -3,6 +3,7 @@ package fscan
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -43,12 +44,12 @@ func newSearchingResult(searchingRoot string, usingRelativePath bool, middleWare
 }
 
 func (sr *ScanResult) record(path string, fi os.FileInfo) error {
-	pth, err := filepath.Rel(sr.searchingRoot, path)
-	if err != nil {
-		return err
-	}
 	root := ""
 	if sr.usingRelativePath {
+		pth, err := filepath.Rel(sr.searchingRoot, path)
+		if err != nil {
+			return err
+		}
 		path = pth
 		root = sr.searchingRoot
 	}
@@ -105,6 +106,7 @@ func (sr *ScanResult) RangeDirs(fn func(pth string, se IScanEntry) error) error 
 	return nil
 }
 
+// FireNew :: immutable - to create a new scan result with given sr
 func (sr *ScanResult) FireNew() (IScanResult, error) {
 	srNew := newSearchingResult(sr.searchingRoot, sr.usingRelativePath, sr.middleWares)
 	err := filepath.Walk(sr.searchingRoot, func(path string, fi os.FileInfo, err error) error {
@@ -142,6 +144,7 @@ func (sr *ScanResult) buildPath() *ScanResult {
 	return sr
 }
 
+// WarmUp all sha1 codes concurrently
 func (sr *ScanResult) WarmUp() {
 	defer debug.TimeStatisticsAndPrint("WarmUp", nil)()
 	if sr.Paths == nil || len(sr.Paths) == 0 {
@@ -200,4 +203,19 @@ func (sr *ScanResult) CalculateSha1Concurrently(concurrent int, errorHandler fun
 	wg.Wait()
 	fmt.Printf("[sr] start calculate finished, total= %d", total) // todo: add dev log
 	return sr
+}
+
+func (sr *ScanResult) GetChildrenTable() map[string][]string {
+	children := make(map[string][]string)
+	for _, pth := range sr.GetPaths() {
+		if pth == sr.searchingRoot {
+			continue
+		}
+		dir := path.Dir(pth)
+		if children[dir] == nil {
+			children[dir] = make([]string, 0)
+		}
+		children[dir] = append(children[dir], pth)
+	}
+	return children
 }
