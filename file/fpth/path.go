@@ -12,6 +12,7 @@ var (
 	Clean = filepath.Clean
 	Join  = filepath.Join
 	Walk  = filepath.Walk
+	Dir   = filepath.Dir
 )
 
 func GetHomePath() (string, error) {
