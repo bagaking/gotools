@@ -51,4 +51,9 @@ func TestAdapt(t *testing.T) {
 	wrapAdapt(t, "/a/b", "./", ORelativeGivenPath("/a/b"))
 	wrapAdapt(t, "/a/b/a/b", "./a/b", ORelativeGivenPath("/a/b"))
 	wrapAdapt(t, "/a", "./..", ORelativeGivenPath("/a/b"))
+	wrapAdapt(t, "/a/c/d", "../c/d", ORelativeGivenPath("/a/b"))
+
+	// relative header
+	wrapAdapt(t, "/a/b/c/d", "@/c/d", ORelativeHeader("@", "/a/b"))
+	wrapAdapt(t, "/b/c/d", "#/c/d", ORelativeHeader("@", "/a"), ORelativeHeader("#", "/b"))
 }

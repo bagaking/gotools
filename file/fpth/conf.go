@@ -3,11 +3,15 @@ package fpth
 type (
 	FolderPathCfg struct {
 		enableHomeDir bool
-		relativeRoot  string
+
+		relativeHeader []struct{ key, val string }
+		relativeRoot   string
 	}
 
 	Option func(cfg FolderPathCfg) FolderPathCfg
 )
+
+var DefaultFolderPathCfg = FolderPathCfg{}
 
 func (cfg FolderPathCfg) merge(opts []Option) FolderPathCfg {
 	cp := cfg
@@ -16,5 +20,3 @@ func (cfg FolderPathCfg) merge(opts []Option) FolderPathCfg {
 	}
 	return cp
 }
-
-var DefaultFolderPathCfg = FolderPathCfg{}
