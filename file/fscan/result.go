@@ -9,6 +9,8 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/bagaking/gotools/file/fop"
+
 	"github.com/bagaking/gotools/debug"
 )
 
@@ -24,6 +26,8 @@ type (
 		// result
 		entries map[string]IScanEntry
 		Paths   []string
+
+		EnableAsyncScan bool
 	}
 )
 
@@ -33,12 +37,13 @@ var (
 	RecommendedConcurrent             = runtime.GOMAXPROCS(0) - 1
 )
 
-func newSearchingResult(searchingRoot string, usingRelativePath bool, middleWares []FileFilter) *ScanResult {
+func newSearchingResult(searchingRoot string, usingRelativePath bool, middleWares []FileFilter, async bool) *ScanResult {
 	sr := &ScanResult{
 		searchingRoot:     searchingRoot,
 		entries:           make(map[string]IScanEntry),
 		middleWares:       middleWares,
 		usingRelativePath: usingRelativePath,
+		EnableAsyncScan:   async,
 	}
 	return sr
 }
@@ -108,8 +113,12 @@ func (sr *ScanResult) RangeDirs(fn func(pth string, se IScanEntry) error) error 
 
 // FireNew :: immutable - to create a new scan result with given sr
 func (sr *ScanResult) FireNew() (IScanResult, error) {
-	srNew := newSearchingResult(sr.searchingRoot, sr.usingRelativePath, sr.middleWares)
-	err := filepath.Walk(sr.searchingRoot, func(path string, fi os.FileInfo, err error) error {
+	srNew := newSearchingResult(sr.searchingRoot, sr.usingRelativePath, sr.middleWares, sr.EnableAsyncScan)
+	options := make([]fop.WalkOptionFunc, 0, 4)
+	if sr.EnableAsyncScan {
+		options = append(options, fop.WalkOptAsync(uint(runtime.NumCPU())))
+	}
+	err := fop.Walk(sr.searchingRoot, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -127,7 +136,7 @@ func (sr *ScanResult) FireNew() (IScanResult, error) {
 			return err
 		}
 		return nil
-	})
+	}, options...)
 	if err != nil {
 		return nil, err
 	}

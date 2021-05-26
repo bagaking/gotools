@@ -38,6 +38,23 @@ func CopyDir(src string, dest string, mkDir bool, errorStop bool) error {
 	})
 }
 
+func CopyFileWithLinkRemain(src, dest string, ensureDir bool) (errRet error) { // todo: test these method with link file
+	si, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
+	if os.ModeSymlink&si.Mode() != 0 { // symbolic link
+		link, err := os.Readlink(src)
+		if err != nil {
+			return err
+		}
+		return os.Symlink(link, dest)
+	}
+
+	return CopyFile(src, dest, ensureDir)
+}
+
 func CopyFile(src, dest string, ensureDir bool) (errRet error) {
 	srcFile, err := os.Open(src)
 	if err != nil {
