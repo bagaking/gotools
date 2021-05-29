@@ -85,33 +85,32 @@ func (w *worker) Close() {
 }
 
 func (w *worker) start(fn func() error) {
-	wait, exit := AtLeastOnce()
 	w.ProcPrinter(w, StrWorkeeStart, 0)
-
-	go func() {
+	// once exit called, the holding will release
+	// but the goroutine will go on until close
+	_ = procast.HoldGo(func(exit func(err error)) {
 		count := int64(0)
 
 		if w.InitStrategy == InitAsync {
-			exit()
+			exit(nil)
 		} else {
-			defer exit()
+			defer exit(nil)
 		}
 
 		defer procast.Recover(w.ErrorHandler, "!!! panic and quit")
 		defer w.ProcPrinter(w, StrWorkeeExit, count)
 
-		UntilClose(w.TickDuration, func() {
+		procast.HoldAndTickUntilClose(w.TickDuration, func() {
 			count++
 			w.ProcPrinter(w, StrWorkeeRun, count)
 			defer procast.Recover(w.ErrorHandler, "!!! panic")
-			err := fn()
-			exit()
-			if err != nil && w.ErrorHandler != nil {
+			if err := fn(); err != nil && w.ErrorHandler != nil { // err will not lead the closing of ticks
 				w.ErrorHandler(err)
 			}
+			exit(nil) // for the first return (a.k.a. atLeastOnce)
 		}, w.chClose)
 
 		w.finished = true
-	}()
-	wait()
+	})
+
 }
