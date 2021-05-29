@@ -28,6 +28,8 @@ type (
 		Paths   []string
 
 		EnableAsyncScan bool
+
+		mu sync.Mutex
 	}
 )
 
@@ -59,8 +61,16 @@ func (sr *ScanResult) record(path string, fi os.FileInfo) error {
 		root = sr.searchingRoot
 	}
 
-	sr.entries[path] = &Entry{
-		root, path, fi, nil,
+	if sr.EnableAsyncScan {
+		sr.mu.Lock()
+		sr.entries[path] = &Entry{
+			root, path, fi, nil,
+		}
+		sr.mu.Unlock()
+	} else {
+		sr.entries[path] = &Entry{
+			root, path, fi, nil,
+		}
 	}
 	return nil
 }
@@ -118,6 +128,7 @@ func (sr *ScanResult) FireNew() (IScanResult, error) {
 	if sr.EnableAsyncScan {
 		options = append(options, fop.WalkOptAsync(uint(runtime.NumCPU())))
 	}
+	defer debug.TimeStatisticsAndPrint("Walk+BuildPath", nil)()
 	err := fop.Walk(sr.searchingRoot, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return err
