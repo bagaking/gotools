@@ -100,7 +100,7 @@ func (w *worker) start(fn func() error) {
 		defer procast.Recover(w.ErrorHandler, "!!! panic and quit")
 		defer w.ProcPrinter(w, StrWorkeeExit, count)
 
-		procast.HoldAndTickUntilClose(w.TickDuration, func() {
+		HoldAndTickUntilClose(w.TickDuration, func() {
 			count++
 			w.ProcPrinter(w, StrWorkeeRun, count)
 			defer procast.Recover(w.ErrorHandler, "!!! panic")
