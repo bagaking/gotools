@@ -2,8 +2,8 @@ package fscan
 
 import "fmt"
 
-func NewAndScan(searchingRoot string, usingRelativePath bool, async bool, middleWares ...FileFilter) (IScanResult, error) {
-	sr := newSearchingResult(searchingRoot, usingRelativePath, middleWares, async)
+func NewAndScan(searchingRoot string, usingRelativePath bool, middleWares ...FileFilter) (IScanResult, error) {
+	sr := newSearchingResult(searchingRoot, usingRelativePath, middleWares)
 	newSr, err := sr.FireNew()
 	if err != nil {
 		return nil, fmt.Errorf("scan failed, %w", err)
@@ -11,7 +11,7 @@ func NewAndScan(searchingRoot string, usingRelativePath bool, async bool, middle
 	return newSr.(IScanResult), nil
 }
 
-func NewEmpty(searchingRoot string, usingRelativePath bool, async bool, middleWares ...FileFilter) (IScanResult, error) {
-	sr := newSearchingResult(searchingRoot, usingRelativePath, middleWares, async)
+func NewEmpty(searchingRoot string, usingRelativePath bool, middleWares ...FileFilter) (IScanResult, error) {
+	sr := newSearchingResult(searchingRoot, usingRelativePath, middleWares)
 	return sr, nil
 }

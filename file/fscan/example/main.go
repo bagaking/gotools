@@ -9,7 +9,6 @@ import (
 func main() {
 	sr, err := fscan.NewAndScan(".",
 		true,
-		false,
 		fscan.FilterIgnoreHiddenFile(),
 		fscan.FilterIgnoreNameTableOfFile("vendor"),
 	)
