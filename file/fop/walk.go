@@ -2,12 +2,11 @@ package fop
 
 import (
 	"errors"
-	"fmt"
-	"github.com/bagaking/gotools/procast"
 	"io/fs"
 	"path/filepath"
 	"sync"
-	//"sync/atomic"
+
+	"github.com/bagaking/gotools/procast"
 )
 
 type (
@@ -22,22 +21,10 @@ type (
 		info fs.FileInfo
 		err  error
 	}
-
 )
 
-var (
-
-	DefaultWalkOption = WalkOption{
-		MaxConcurrent: 1,
-	}
-	taskPool = sync.Pool{ New: func() interface{} { return &walkTask{} }}
-)
-
-func WalkOptAsync(concurrent uint) WalkOptionFunc {
-	return func(w WalkOption) WalkOption {
-		w.MaxConcurrent = concurrent
-		return w
-	}
+var DefaultWalkOption = WalkOption{
+	MaxConcurrent: 1,
 }
 
 func (wo WalkOption) pipe(opts ...WalkOptionFunc) WalkOption {
@@ -59,28 +46,20 @@ func Walk(root string, fn filepath.WalkFunc, opts ...WalkOptionFunc) error {
 }
 
 func walkAsync(root string, fn filepath.WalkFunc, option WalkOption) (err error) {
+	wgHandle := sync.WaitGroup{}
 	chTask := make(chan *walkTask) // give a buffer ?
-	wg := sync.WaitGroup{}
 
-	stopOrFailed := procast.NewCloseOrFailedProc(func(er error) error {
-		if er == filepath.SkipDir {
-			return nil
-		}
-		fmt.Println("=== err :", er)
-		return nil // todo: if error returns, the wg may cause dead lock
-	})
+	stopOrFailed := procast.NewCloseOrFailedProc(nil)
 	stopOrFailed.GoAfterStop(func(error) {
 		close(chTask)
 	})
-	handle := func() {
-		for task, ok := <-chTask; ok; task, ok = <-chTask {
-			wg.Done()
 
-			if er := fn(task.path, task.info, task.err); er != nil {
+	handle := func() {
+		for file, ok := <-chTask; ok; file, ok = <-chTask {
+			if er := fn(file.path, file.info, file.err); er != nil {
 				stopOrFailed.Fail(er)
 			}
-
-			taskPool.Put(task)
+			wgHandle.Done()
 		}
 	}
 
@@ -88,25 +67,20 @@ func walkAsync(root string, fn filepath.WalkFunc, option WalkOption) (err error)
 		go handle()
 	}
 
-	errProcStop := errors.New("proc stopped")
 	scan := func(path string, info fs.FileInfo, err error) error {
 		if stopOrFailed.Closed() {
-			return errProcStop
+			return errors.New("proc stopped")
 		}
-		wg.Add(1)
-		v := taskPool.Get().(*walkTask)
-		v.path = path
-		v.info = info
-		v.err = err
-		chTask <- v
+		wgHandle.Add(1)
+		chTask <- &walkTask{path, info, err}
 		return nil
 	}
 
-	_ = procast.HoldGo(func(closer func(err error)) {
-		_ = filepath.Walk(root, scan)
-		closer(nil)
-	})
-	wg.Wait()
+	if errScan := procast.HoldGo(func(trigger func(err error)) {
+		trigger(filepath.Walk(root, scan))
+	}); errScan != nil {
+		wgHandle.Wait()
+	}
 
 	return stopOrFailed.Done().Err()
 }

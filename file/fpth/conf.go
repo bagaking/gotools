@@ -2,13 +2,14 @@ package fpth
 
 type (
 	FolderPathCfg struct {
+		replacers     []relativeFn
 		enableHomeDir bool
-
-		relativeHeader []struct{ key, val string }
-		relativeRoot   string
+		relativeRoot  string
 	}
 
 	Option func(cfg FolderPathCfg) FolderPathCfg
+
+	relativeFn func(val string) string
 )
 
 var DefaultFolderPathCfg = FolderPathCfg{}

@@ -44,7 +44,7 @@ func CopyFileWithLinkRemain(src, dest string, ensureDir bool) (errRet error) { /
 		return err
 	}
 
-	if os.ModeSymlink&si.Mode() != 0 { // symbolic link
+	if os.ModeSymlink & si.Mode() != 0 { // symbolic link
 		link, err := os.Readlink(src)
 		if err != nil {
 			return err

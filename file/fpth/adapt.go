@@ -17,6 +17,12 @@ func Adapt(pth string, opts ...Option) (string, error) {
 		pth = strings.Trim(pth, " ")
 	}
 
+	// do placeholder first thus $PARAM can be replaced to `~` (Home) and `.` (Relative)
+	// inefficient way, which based on the assumption that there are few placeholders
+	for _, replacer := range cfg.replacers {
+		pth = replacer(pth)
+	}
+
 	if pth[0] == '~' && cfg.enableHomeDir {
 		homePth, err := GetHomePath()
 		if err != nil {
@@ -31,18 +37,6 @@ func Adapt(pth string, opts ...Option) (string, error) {
 			return "", err
 		}
 		pth = result
-	}
-
-	// inefficient way, which based on the assumption that there are few placeholders
-	for _, placeholder := range cfg.relativeHeader {
-		lenOfPth, lenOfKey := len(pth), len(placeholder.key)
-		if lenOfPth < lenOfKey {
-			continue
-		}
-		if pth[:lenOfKey] != placeholder.key {
-			continue
-		}
-		pth = placeholder.val + pth[lenOfKey:]
 	}
 
 	return Clean(pth), nil

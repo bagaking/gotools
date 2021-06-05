@@ -1,5 +1,7 @@
 package fpth
 
+import "strings"
+
 // OEnableHomeDir - enable the path format such as `~/a/b/c`
 func OEnableHomeDir() Option {
 	return func(cfg FolderPathCfg) FolderPathCfg {
@@ -28,12 +30,25 @@ func ORelativePWDPath() Option {
 
 // ORelativeHeader - enable the path format such as `<place_holder>/a/b/c`
 // the placeholder will be replaced with the running path
-func ORelativeHeader(placeholder string, val string) Option {
+func ORelativeHeader(placeholder string, val string, caseIgnore bool) Option {
 	return func(cfg FolderPathCfg) FolderPathCfg {
-		if cfg.relativeHeader == nil {
-			cfg.relativeHeader = make([]struct{ key, val string }, 0)
+		if cfg.replacers == nil {
+			cfg.replacers = make([]relativeFn, 0)
 		}
-		cfg.relativeHeader = append(cfg.relativeHeader, struct{ key, val string }{placeholder, val})
+		cfg.replacers = append(cfg.replacers, func(pth string) string {
+			nKey, nHolder := len(pth), len(placeholder)
+			if nKey < nHolder {
+				return pth
+			}
+			match := pth[:nKey]
+			if caseIgnore {
+				match, placeholder = strings.ToLower(match), strings.ToLower(placeholder)
+			}
+			if match != placeholder {
+				return pth
+			}
+			return val + pth[nKey:]
+		})
 		return cfg
 	}
 }
