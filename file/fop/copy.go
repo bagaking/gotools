@@ -1,11 +1,18 @@
 package fop
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/bagaking/gotools/file/fpth"
+)
+
+var (
+	ErrFileConflict     = errors.New("conflicts with existing file")
+	ErrFileRemoveFailed = errors.New("remove files failed")
 )
 
 func CopyDir(src string, dest string, mkDir bool, errorStop bool) error {
@@ -44,7 +51,7 @@ func CopyFileWithLinkRemain(src, dest string, ensureDir bool) (errRet error) { /
 		return err
 	}
 
-	if os.ModeSymlink & si.Mode() != 0 { // symbolic link
+	if os.ModeSymlink&si.Mode() != 0 { // symbolic link
 		link, err := os.Readlink(src)
 		if err != nil {
 			return err
@@ -67,12 +74,12 @@ func CopyFile(src, dest string, ensureDir bool) (errRet error) {
 	}()
 
 	if ensureDir {
-		if err = os.MkdirAll(fpth.Dir(dest), os.ModePerm); err != nil {
+		if err = EnsureDirOfFilePth(dest); err != nil {
 			return err
 		}
 	}
 
-	dstFile, err := os.Create(dest)
+	dstFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -82,6 +89,37 @@ func CopyFile(src, dest string, ensureDir bool) (errRet error) {
 		}
 	}()
 	if _, err = io.Copy(dstFile, srcFile); err != nil {
+		return err
+	}
+	return nil
+}
+
+func SaveFile(srcStream io.Reader, dest string, override bool) (errRet error) {
+	if err := os.MkdirAll(fpth.Dir(dest), os.ModePerm); err != nil {
+		return fmt.Errorf("makedir failed, %w, dest= %s", err, dest)
+	}
+
+	if exist, err := fpth.PathExists(dest); err != nil {
+		return fmt.Errorf("test path failed, %w, dest= %s", err, dest)
+	} else if exist {
+		if !override {
+			return fmt.Errorf("%w, dest= %s", ErrFileConflict, dest)
+		}
+		if err = os.Remove(dest); err != nil {
+			return fmt.Errorf("override failed, %w, dest= %s", ErrFileRemoveFailed, dest)
+		}
+	}
+
+	dstFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if eClose := dstFile.Close(); eClose != nil {
+			errRet = eClose
+		}
+	}()
+	if _, err = io.Copy(dstFile, srcStream); err != nil {
 		return err
 	}
 	return nil

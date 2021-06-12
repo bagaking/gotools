@@ -2,8 +2,9 @@ package fop
 
 import (
 	"fmt"
-	"github.com/bagaking/gotools/file/fpth"
 	"io/ioutil"
+
+	"github.com/bagaking/gotools/file/fpth"
 )
 
 func ReadFile(pth string) ([]byte, error) {

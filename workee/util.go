@@ -28,4 +28,3 @@ func HoldAndTickUntilClose(tick time.Duration, fn func(), chClose <-chan struct{
 		}
 	}
 }
-

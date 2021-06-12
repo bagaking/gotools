@@ -112,5 +112,4 @@ func (w *worker) start(fn func() error) {
 
 		w.finished = true
 	})
-
 }

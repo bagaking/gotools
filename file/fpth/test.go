@@ -12,9 +12,19 @@ func TestDir(pth string) error {
 	if err != nil {
 		return err
 	}
-
 	if !stat.IsDir() {
 		return ErrIsNotDir
 	}
 	return nil
+}
+
+func PathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }
