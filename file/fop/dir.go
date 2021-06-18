@@ -1,9 +1,9 @@
 package fop
 
 import (
-  "os"
+	"os"
 
-  "github.com/bagaking/gotools/file/fpth"
+	"github.com/bagaking/gotools/file/fpth"
 )
 
 var MkdirAll = os.MkdirAll
