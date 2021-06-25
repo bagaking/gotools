@@ -18,7 +18,7 @@ type (
 	}
 
 	Table interface {
-		GetTitle() TitleLine
+		GetTitleLine() *TitleLine
 
 		/* index */
 

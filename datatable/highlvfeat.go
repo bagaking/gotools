@@ -18,7 +18,7 @@ func (t *table) FindOne(q SingleQuery, selectTags ...string) Line {
 	if len(selectTags) == 0 {
 		return t.GetLine(row)
 	}
-	cols := t.titleLine.SearchTagsInd(selectTags...)
+	cols := t.titleLine.SearchColsByTags(selectTags...)
 	if len(cols) == 0 {
 		return Line{}
 	}

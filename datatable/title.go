@@ -2,8 +2,8 @@ package datatable
 
 type (
 	Title struct {
-		Value Plain `json:"value"`
-		Tags  Tags  `json:"extra"`
+		Value Value `json:"value"`
+		Tags  Tags  `json:"tags"`
 	}
 
 	Tags map[string]bool

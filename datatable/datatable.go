@@ -37,8 +37,8 @@ func (t *table) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func (t *table) GetTitle() TitleLine {
-	return t.titleLine
+func (t *table) GetTitleLine() *TitleLine {
+	return &t.titleLine
 }
 
 func (t *table) Height() int {

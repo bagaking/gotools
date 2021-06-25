@@ -24,7 +24,7 @@ func (tl *TitleLine) SearchOneInd(match func(title Title) bool) int {
 	return -1
 }
 
-func (tl *TitleLine) SearchAllInd(match func(title Title) bool) (cols []int) {
+func (tl *TitleLine) SearchCols(match func(title Title) bool) (cols []int) {
 	cols = []int{}
 	if match == nil {
 		return
@@ -37,8 +37,8 @@ func (tl *TitleLine) SearchAllInd(match func(title Title) bool) (cols []int) {
 	return
 }
 
-func (tl *TitleLine) SearchTagsInd(tags ...string) []int {
-	return tl.SearchAllInd(func(title Title) bool { // O(n^2)
+func (tl *TitleLine) SearchColsByTags(tags ...string) (cols []int) {
+	return tl.SearchCols(func(title Title) bool { // O(n^2)
 		for _, tag := range tags {
 			if title.HasTag(tag) {
 				return true
@@ -46,4 +46,17 @@ func (tl *TitleLine) SearchTagsInd(tags ...string) []int {
 		}
 		return false
 	})
+}
+
+func (tl *TitleLine) SubTitleLine(cols []int) TitleLine {
+	ret := make(TitleLine, 0, len(cols))
+	for _, col := range cols {
+		ret = append(ret, (*tl)[col])
+	}
+	return ret
+}
+
+func (tl *TitleLine) SubTitleLineByTags(tags ...string) TitleLine {
+	cols := tl.SearchColsByTags(tags...)
+	return tl.SubTitleLine(cols)
 }
