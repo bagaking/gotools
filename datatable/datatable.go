@@ -1,10 +1,10 @@
 package datatable
 
 import (
-  "encoding/json"
-  "sync"
+	"encoding/json"
+	"fmt"
+	"sync"
 )
-
 
 type (
 	exporter struct {
@@ -54,12 +54,13 @@ func (t *table) Width() int {
 }
 
 func (t *table) AppendRow(line Line) error {
-	return t.SetRow(t.MaxRow()+1, line)
+	return t.SetRow(t.Height(), line)
 }
 
 func (t *table) SetRow(row int, line Line) error {
-	if len(line) >= t.Width() {
-		return ErrOutOfRange
+	lineWidth, tableWidth := line.Width(), t.Width()
+	if lineWidth > t.Width() {
+		return fmt.Errorf("%w, %d > %d", ErrOutOfRange, lineWidth, tableWidth)
 	}
 
 	t.mu.Lock()
@@ -113,26 +114,25 @@ func (t *table) Set(row, col int, val Value) error {
 	return nil
 }
 
-func (t *table) Get(row, col int) Value {
+func (t *table) GetLine(row int) Line {
 	if t.grid == nil {
-		return Empty
+		return nil
 	}
-	if row > t.MaxRow() || col >= t.Width() {
-		return Empty
+	if row < 0 || row > t.MaxRow() {
+		return nil
 	}
-	line := t.grid[row]
-	if line == nil || col >= len(line) {
-		return Empty
-	}
-	return line[col]
+	return t.grid[row]
 }
 
-func (t *table) Query(title Title, row int) Value {
-	col := t.titleGetOne(title, nil)
-	return t.Get(row, col)
+func (t *table) Gets(row int, cols ...int) Line {
+	return t.GetLine(row).Gets(cols...)
 }
 
-func (t *table) FindRow(col int, value Value) int {
+func (t *table) Get(row, col int) Value {
+	return t.GetLine(row).Get(col)
+}
+
+func (t *table) GetRowByColAndVal(col int, value Value) int {
 	str := value.String()
 	for i, line := range t.grid {
 		if line[col].String() == str {
@@ -140,43 +140,6 @@ func (t *table) FindRow(col int, value Value) int {
 		}
 	}
 	return -1
-}
-
-func (t *table) QueryByID(id Plain, resultTitle ...Title) (map[Plain]Value, error) {
-	row, err := t.getRowByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := make(map[Plain]Value)
-	for _, title := range resultTitle {
-		col := t.titleGetOne(title.Value, nil)
-		if col < 0 {
-			ret[title.Value] = Empty
-			continue
-		}
-		ret[title.Value] = t.grid[row][col]
-	}
-
-	return ret, nil
-}
-
-func (t *table) StoreByID(id Plain, values map[Plain]Value) error {
-	row, err := t.getRowByID(id)
-	if err != nil {
-		return err
-	}
-
-	for titleValue := range values {
-		col := t.titleGetOne(titleValue, nil)
-		if col < 0 {
-			return ErrTitleNotFound
-		}
-		if err = t.Set(row, col, values[titleValue]); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (t *table) SetByPos(row int, col int, val Value) error {
@@ -196,7 +159,7 @@ func (t *table) SetByPos(row int, col int, val Value) error {
 	return nil
 }
 
-func New(title []Title) Taball {
+func New(title []Title) Table {
 	return &table{
 		titleLine: title,
 		grid:      make(Grid, 0),
@@ -218,40 +181,4 @@ func (t *table) getTitleMappingCache() map[Value]int {
 	}
 
 	return t.titleMappingCache
-}
-
-func (t *table) findTitleOne(match func(title Title) bool) int {
-	if match == nil {
-		return -1
-	}
-	for i := 0; i < len(t.titleLine); i++ {
-		if match(t.titleLine[i]) {
-			return i
-		}
-	}
-	return -1
-}
-
-func (t *table) titleGetOne(titleVal Value, extraMatching func(extra TitleExtra) bool) int {
-	tm := t.getTitleMappingCache()
-	i, ok := tm[titleVal]
-	if !ok {
-		return -1
-	}
-	if t.titleLine[i].Match(titleVal, extraMatching) {
-		return i
-	}
-	return -1
-}
-
-func (t *table) getRowByID(id Plain) (int, error) {
-	idCol := t.findTitleOne(Title.IsID)
-	if idCol < 0 {
-		return -1, ErrTitleNotFound
-	}
-	row := t.FindRow(idCol, id)
-	if row < 0 {
-		return -1, ErrRowNotFound
-	}
-	return row, nil
 }

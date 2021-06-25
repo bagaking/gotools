@@ -8,29 +8,49 @@ import (
 
 type (
 	Value fmt.Stringer
-	Line  []Value
+
 	Grid  []Line
 	Plain string
 
-	Taball interface {
+	SingleQuery struct {
+		Tag string `json:"tag"`
+		Val Plain  `json:"val"`
+	}
+
+	Table interface {
 		GetTitle() TitleLine
+
+		/* index */
+
+		// Width - get width of the table
 		Width() int
 		Height() int
 		MaxRow() int
+		GetRowByColAndVal(col int, value Value) int
 
+		/* values */
+
+		// AppendRow - append a row in the end of the table
 		AppendRow(line Line) error
 		SetRow(row int, line Line) error
 		GetRow(row int) Line
 
 		Set(row, col int, val Value) error
 
+		GetLine(row int) Line
 		// Get returns Empty when out of range
 		Get(row, col int) Value
+		Gets(row int, cols ...int) Line
 
-		Query(title Title, row int) Value
+		/* high level */
 
-		QueryByID(id Plain, resultTitle ...Title) (map[Plain]Value, error)
-		StoreByID(id Plain, values map[Plain]Value) error
+		// FindOnePos returns the row and col by tag and tagVal
+		FindOnePos(q SingleQuery) (row int, col int)
+
+		// FindOne returns the value by tag and tagVal
+		FindOne(q SingleQuery, selectTags ...string) Line
+
+		Render(titles TitleLine, showTitle bool) [][]string
 
 		json.Marshaler
 		json.Unmarshaler
@@ -48,6 +68,10 @@ var (
 	ErrTitleNotFound = errors.New("title not found")
 	ErrRowNotFound   = errors.New("row not found")
 )
+
+func (l Line) Width() int {
+	return len(l)
+}
 
 func (l Line) Expand(width int, defaultValue Value) Line {
 	line := l
