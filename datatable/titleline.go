@@ -1,7 +1,7 @@
 package datatable
 
 type (
-	TitleLine []Title
+	TitleLine []*Title
 )
 
 func (tl *TitleLine) ToStrLst() []string {
@@ -12,7 +12,7 @@ func (tl *TitleLine) ToStrLst() []string {
 	return ret
 }
 
-func (tl *TitleLine) SearchOneInd(match func(title Title) bool) int {
+func (tl *TitleLine) SearchOneInd(match func(title *Title) bool) int {
 	if match == nil {
 		return -1
 	}
@@ -24,7 +24,7 @@ func (tl *TitleLine) SearchOneInd(match func(title Title) bool) int {
 	return -1
 }
 
-func (tl *TitleLine) SearchCols(match func(title Title) bool) (cols []int) {
+func (tl *TitleLine) SearchCols(match func(title *Title) bool) (cols []int) {
 	cols = []int{}
 	if match == nil {
 		return
@@ -34,11 +34,11 @@ func (tl *TitleLine) SearchCols(match func(title Title) bool) (cols []int) {
 			cols = append(cols, i)
 		}
 	}
-	return
+	return cols
 }
 
 func (tl *TitleLine) SearchColsByTags(tags ...string) (cols []int) {
-	return tl.SearchCols(func(title Title) bool { // O(n^2)
+	return tl.SearchCols(func(title *Title) bool { // O(n^2)
 		for _, tag := range tags {
 			if title.HasTag(tag) {
 				return true

@@ -63,6 +63,10 @@ func (t Plain) String() string {
 	return string(t)
 }
 
+func (t Plain) AddOn(val string) Plain {
+	return Plain(t.String() + val)
+}
+
 var (
 	ErrOutOfRange    = errors.New("position out if range")
 	ErrTitleNotFound = errors.New("title not found")

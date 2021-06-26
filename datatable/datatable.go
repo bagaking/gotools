@@ -15,7 +15,7 @@ type (
 	table struct {
 		titleLine         TitleLine
 		grid              Grid
-		titleMappingCache map[Value]int
+		titleMappingCache map[string]int
 		mu                sync.Mutex
 	}
 )
@@ -159,14 +159,14 @@ func (t *table) SetByPos(row int, col int, val Value) error {
 	return nil
 }
 
-func New(title []Title) Table {
+func New(title TitleLine) Table {
 	return &table{
 		titleLine: title,
 		grid:      make(Grid, 0),
 	}
 }
 
-func (t *table) getTitleMappingCache() map[Value]int {
+func (t *table) getTitleMappingCache() map[string]int {
 	if t.titleMappingCache != nil {
 		return t.titleMappingCache
 	}
@@ -174,9 +174,9 @@ func (t *table) getTitleMappingCache() map[Value]int {
 	defer t.mu.Unlock()
 
 	if t.titleMappingCache == nil {
-		t.titleMappingCache = make(map[Value]int)
+		t.titleMappingCache = make(map[string]int)
 		for i := len(t.titleLine) - 1; i >= 0; i-- {
-			t.titleMappingCache[t.titleLine[i].Value] = i
+			t.titleMappingCache[t.titleLine[i].Value.String()] = i
 		}
 	}
 

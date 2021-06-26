@@ -2,41 +2,60 @@ package datatable
 
 type (
 	Title struct {
-		Value Value `json:"value"`
-		Tags  Tags  `json:"tags"`
+		Value  Plain    `json:"value"`
+		tags   []string `json:"tags"`
+		tagMap map[string]bool
 	}
-
-	Tags map[string]bool
 )
 
-func (t Title) String() string {
+func NewTitle(value string, tags ...string) *Title {
+	ret := &Title{
+		Value:  Plain(value),
+		tags:   tags,
+		tagMap: make(map[string]bool),
+	}
+	for _, tag := range tags {
+		ret.tagMap[tag] = true
+	}
+	return ret
+}
+
+func (t *Title) DerivativeCovered(value string) *Title {
+	return NewTitle(value, t.tags...)
+}
+
+func (t *Title) DerivativeAddOn(addOn string) *Title {
+	return NewTitle(t.Value.String()+addOn, t.tags...)
+}
+
+func (t *Title) String() string {
+	if t == nil {
+		return ""
+	}
 	return t.Value.String()
 }
 
-func (t *Title) Distinct(match func(extra Tags) bool) bool {
-	if match == nil {
-		return false
+func (t *Title) Mark(tag string) *Title {
+	if t == nil {
+		return t
 	}
-	return match(t.Tags)
-}
-
-func (t *Title) Match(titleVal Value, extraMatching func(extra Tags) bool) bool {
-	if t.Value.String() != titleVal.String() {
-		return false
+	if t.tags == nil {
+		t.tags = make([]string, 0)
 	}
-	if extraMatching == nil {
-		return true
+	if t.tagMap == nil {
+		t.tagMap = make(map[string]bool)
 	}
-	return extraMatching(t.Tags)
-}
-
-func (t *Title) MarkTag(tag string) *Title {
-	if t != nil && t.Tags != nil {
-		t.Tags[tag] = true
-	}
+	t.tags = append(t.tags, tag)
+	t.tagMap[tag] = true
 	return t
 }
 
-func (t Title) HasTag(tag string) bool {
-	return t.Tags[tag]
+func (t *Title) HasTag(tag string) bool {
+	if t == nil {
+		return false
+	}
+	if t.tagMap == nil {
+		return false
+	}
+	return t.tagMap[tag]
 }

@@ -1,7 +1,7 @@
 package datatable
 
 func (t *table) FindOnePos(q SingleQuery) (row int, col int) {
-	if col = t.titleLine.SearchOneInd(func(title Title) bool {
+	if col = t.titleLine.SearchOneInd(func(title *Title) bool {
 		return title.HasTag(q.Tag)
 	}); col < 0 {
 		return -1, -1
@@ -25,7 +25,7 @@ func (t *table) FindOne(q SingleQuery, selectTags ...string) Line {
 	return t.GetLine(row).Gets(cols...)
 }
 
-func (t *table) searchTitleOne(match func(title Title) bool) int {
+func (t *table) searchTitleOne(match func(title *Title) bool) int {
 	if match == nil {
 		return -1
 	}
@@ -39,7 +39,7 @@ func (t *table) searchTitleOne(match func(title Title) bool) int {
 
 func (t *table) getColByTitle(titleVal Value, tags ...string) int {
 	tm := t.getTitleMappingCache()
-	i, ok := tm[titleVal]
+	i, ok := tm[titleVal.String()]
 	if !ok {
 		return -1
 	}

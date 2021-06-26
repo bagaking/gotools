@@ -2,8 +2,9 @@ package datatable
 
 func (t *table) Render(titles TitleLine, showTitle bool) [][]string {
 	indsMap, inds := t.getTitleMappingCache(), make([]int, 0, len(titles))
+
 	for _, title := range titles {
-		inds = append(inds, indsMap[title.Value])
+		inds = append(inds, indsMap[title.Value.String()])
 	}
 
 	data := make([][]string, 0, len(t.grid)+1)
