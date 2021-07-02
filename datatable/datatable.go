@@ -76,6 +76,7 @@ func (t *table) SetRow(row int, line Line) error {
 	for i, l := range line {
 		if i < lenDR {
 			t.grid[row][i] = l
+			continue
 		}
 		t.grid[row] = append(t.grid[row], l)
 	}

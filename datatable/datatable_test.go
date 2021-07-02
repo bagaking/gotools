@@ -21,6 +21,29 @@ func TestEmpty(t *testing.T) {
 	assert.Error(t, err, "cannot set out of range")
 }
 
+func TestSetRowReplacesExistingCellsWithoutAppending(t *testing.T) {
+	titleLine := TitleLine{NewTitle("A"), NewTitle("B")}
+	table := New(titleLine)
+
+	if err := table.AppendRow(Line{Plain("a1"), Plain("b1")}); err != nil {
+		t.Fatalf("AppendRow() error = %v", err)
+	}
+	if err := table.SetRow(0, Line{Plain("a2")}); err != nil {
+		t.Fatalf("SetRow() error = %v", err)
+	}
+
+	row := table.GetLine(0)
+	if len(row) != 2 {
+		t.Fatalf("SetRow() row length = %d, want 2", len(row))
+	}
+	if row[0].String() != "a2" {
+		t.Fatalf("SetRow() first cell = %q, want %q", row[0].String(), "a2")
+	}
+	if row[1].String() != "b1" {
+		t.Fatalf("SetRow() second cell = %q, want %q", row[1].String(), "b1")
+	}
+}
+
 func Example() {
 	const (
 		TagID          = "ID"
