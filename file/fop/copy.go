@@ -79,7 +79,7 @@ func CopyFile(src, dest string, ensureDir bool) (errRet error) {
 		}
 	}
 
-	dstFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	dstFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		return err
 	}
