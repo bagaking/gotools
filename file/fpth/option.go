@@ -30,24 +30,25 @@ func ORelativePWDPath() Option {
 
 // ORelativeHeader - enable the path format such as `<place_holder>/a/b/c`
 // the placeholder will be replaced with the running path
-func ORelativeHeader(placeholder string, val string, caseIgnore bool) Option {
+func ORelativeHeader(placeholder string, val string, caseIgnores ...bool) Option {
 	return func(cfg FolderPathCfg) FolderPathCfg {
 		if cfg.replacers == nil {
 			cfg.replacers = make([]relativeFn, 0)
 		}
 		cfg.replacers = append(cfg.replacers, func(pth string) string {
+			caseIgnore := len(caseIgnores) > 0 && caseIgnores[0]
 			nKey, nHolder := len(pth), len(placeholder)
 			if nKey < nHolder {
 				return pth
 			}
-			match := pth[:nKey]
+			match := pth[:nHolder]
 			if caseIgnore {
 				match, placeholder = strings.ToLower(match), strings.ToLower(placeholder)
 			}
 			if match != placeholder {
 				return pth
 			}
-			return val + pth[nKey:]
+			return val + pth[nHolder:]
 		})
 		return cfg
 	}

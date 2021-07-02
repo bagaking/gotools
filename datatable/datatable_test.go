@@ -21,7 +21,7 @@ func TestEmpty(t *testing.T) {
 	assert.Error(t, err, "cannot set out of range")
 }
 
-func ExampleCreateAndRender() {
+func Example() {
 	const (
 		TagID          = "ID"
 		TagDescription = "Description"
