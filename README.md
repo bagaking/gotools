@@ -24,11 +24,25 @@ when importing a specific package.
 
 ## Import
 
+The repository is split into one root module and several independently
+versioned submodules. Import packages from the module that owns the directory
+you use:
+
+| Module | Owns |
+| --- | --- |
+| `github.com/bagaking/gotools` | `datatable`, `debug`, `file/*`, `lane`, `workee` |
+| `github.com/bagaking/gotools/annotation` | `annotation`, `annotation/kvstr` |
+| `github.com/bagaking/gotools/csvp` | `csvp` |
+| `github.com/bagaking/gotools/fuctx` | `fuctx` |
+| `github.com/bagaking/gotools/procast` | `procast` |
+| `github.com/bagaking/gotools/reflectool` | `reflectool` |
+| `github.com/bagaking/gotools/strs` | `strs` |
+
 ```go
 import "github.com/bagaking/gotools/datatable"
 ```
 
-For submodules, import the module path for that package, for example:
+For submodules, import the nested module path for that package:
 
 ```go
 import "github.com/bagaking/gotools/strs"
