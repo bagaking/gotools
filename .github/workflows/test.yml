@@ -27,7 +27,4 @@ jobs:
           go-version-file: go.mod
 
       - name: Test root and nested modules
-        run: |
-          for module in . annotation csvp fuctx procast reflectool strs; do
-            (cd "$module" && go test ./...)
-          done
+        run: make test

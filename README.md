@@ -50,8 +50,26 @@ import "github.com/bagaking/gotools/strs"
 
 ## Local Verification
 
-`go test ./...` covers the root module only. Run it from each nested module as
-well:
+`go test ./...` covers the current module only. From the repository root, use
+the shared target that CI also runs:
+
+```sh
+make test
+```
+
+That target runs `go test ./...` in every module:
+
+| Module directory | Command |
+| --- | --- |
+| `.` | `go test ./...` |
+| `annotation` | `go test ./...` |
+| `csvp` | `go test ./...` |
+| `fuctx` | `go test ./...` |
+| `procast` | `go test ./...` |
+| `reflectool` | `go test ./...` |
+| `strs` | `go test ./...` |
+
+If `make` is unavailable, run the same loop directly:
 
 ```sh
 for module in . annotation csvp fuctx procast reflectool strs; do
