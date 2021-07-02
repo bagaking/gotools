@@ -12,7 +12,7 @@ func (l Line) Len() int {
 }
 
 func (l Line) Get(col int) Value {
-	if l == nil || col < 0 || col > l.Len() {
+	if l == nil || col < 0 || col >= l.Len() {
 		return Empty
 	}
 	return l[col]
@@ -22,7 +22,7 @@ func (l Line) Gets(cols ...int) Line {
 	if len(cols) == 0 {
 		return l
 	}
-	ret := make([]Value, len(cols))
+	ret := make([]Value, 0, len(cols))
 	for _, col := range cols {
 		ret = append(ret, l.Get(col))
 	}

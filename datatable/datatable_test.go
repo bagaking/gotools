@@ -44,6 +44,35 @@ func TestSetRowReplacesExistingCellsWithoutAppending(t *testing.T) {
 	}
 }
 
+func TestLineGetReturnsEmptyAtLenBoundary(t *testing.T) {
+	line := Line{Plain("a")}
+
+	got := line.Get(line.Len())
+
+	if got != Empty {
+		t.Fatalf("Get(Len()) = %q, want Empty", got.String())
+	}
+}
+
+func TestLineGetsReturnsOnlyRequestedColumns(t *testing.T) {
+	line := Line{Plain("a"), Plain("b")}
+
+	got := line.Gets(1, 2, -1)
+
+	if len(got) != 3 {
+		t.Fatalf("Gets() length = %d, want 3", len(got))
+	}
+	if got[0].String() != "b" {
+		t.Fatalf("Gets()[0] = %q, want %q", got[0].String(), "b")
+	}
+	if got[1] != Empty {
+		t.Fatalf("Gets()[1] = %q, want Empty", got[1].String())
+	}
+	if got[2] != Empty {
+		t.Fatalf("Gets()[2] = %q, want Empty", got[2].String())
+	}
+}
+
 func Example() {
 	const (
 		TagID          = "ID"
