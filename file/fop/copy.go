@@ -79,6 +79,16 @@ func CopyFile(src, dest string, ensureDir bool) (errRet error) {
 		}
 	}
 
+	srcInfo, err := srcFile.Stat()
+	if err != nil {
+		return err
+	}
+	if destInfo, err := os.Stat(dest); err == nil && os.SameFile(srcInfo, destInfo) {
+		return nil
+	} else if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
 	dstFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		return err
