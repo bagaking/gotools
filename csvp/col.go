@@ -23,9 +23,8 @@ func (ColAnnotation) TagName() string {
 }
 
 var (
-	once        = sync.Once{}
-	csvAnStruct *annotation.StructAnnotations
-	template    = ColAnnotation{}
+	csvAnStructCache sync.Map
+	template         = ColAnnotation{}
 )
 
 func ParseByCol(outSlicePointer interface{}, reader LineReader) error {
@@ -63,14 +62,9 @@ func ParseByCol(outSlicePointer interface{}, reader LineReader) error {
 }
 
 func ParseLineByCol(data interface{}, line []string) (err error) {
-	if csvAnStruct == nil {
-		holder, err := annotation.Analyze(data, template)
-		if err != nil {
-			return fmt.Errorf("%w, analyze model failed", err)
-		}
-		once.Do(func() {
-			csvAnStruct = holder
-		})
+	csvAnStruct, err := csvAnnotationsFor(data)
+	if err != nil {
+		return err
 	}
 
 	if err = reflectool.ForEachField(data, func(fCtx reflectool.FieldContext) error {
@@ -80,6 +74,9 @@ func ParseLineByCol(data interface{}, line []string) (err error) {
 		}
 
 		aCSV := a.(*ColAnnotation)
+		if aCSV.Col < 0 || aCSV.Col >= len(line) {
+			return fmt.Errorf("csv column %d out of range for field %s, line has %d columns", aCSV.Col, fCtx.Path, len(line))
+		}
 		valStr := line[aCSV.Col]
 		var value interface{}
 		parser := aCSV.Parser
@@ -108,4 +105,25 @@ func ParseLineByCol(data interface{}, line []string) (err error) {
 	}
 
 	return nil
+}
+
+func csvAnnotationsFor(data interface{}) (*annotation.StructAnnotations, error) {
+	ty := reflect.TypeOf(data)
+	if ty == nil {
+		return nil, fmt.Errorf("analyze model failed, data is nil")
+	}
+	for ty.Kind() == reflect.Ptr {
+		ty = ty.Elem()
+	}
+
+	if cached, ok := csvAnStructCache.Load(ty); ok {
+		return cached.(*annotation.StructAnnotations), nil
+	}
+
+	holder, err := annotation.Analyze(data, template)
+	if err != nil {
+		return nil, fmt.Errorf("%w, analyze model failed", err)
+	}
+	actual, _ := csvAnStructCache.LoadOrStore(ty, holder)
+	return actual.(*annotation.StructAnnotations), nil
 }
