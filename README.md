@@ -11,7 +11,7 @@ operations, string conversion, lightweight workers, and related utilities.
 | `annotation` | Struct tag annotation helpers and key-value tag parsing support. |
 | `csvp` | CSV line parsing into structs using `csv` field annotations. |
 | `datatable` | Simple table, title, line, and render helpers for string-like data. |
-| `file` | File utilities, including path adaptation, file operations, dumping, and scanning subpackages. |
+| `file/fdumper`, `file/fop`, `file/fpth`, `file/fscan` | File dumping, file operations, path adaptation, and file scanning helpers. |
 | `fuctx` | Context wrapper with start, abort, wait, and duration tracking methods. |
 | `lane` | Named payload lanes with tag-based matching helpers. |
 | `procast` | Goroutine helpers for panic recovery and close-or-fail process control. |
@@ -36,8 +36,13 @@ import "github.com/bagaking/gotools/strs"
 
 ## Local Verification
 
+`go test ./...` covers the root module only. Run it from each nested module as
+well:
+
 ```sh
-go test ./...
+for module in . annotation csvp fuctx procast reflectool strs; do
+  (cd "$module" && go test ./...)
+done
 ```
 
 ## License
