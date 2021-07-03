@@ -1,4 +1,4 @@
-MODULES := $(shell find . -name go.mod ! -path './.git/*' ! -path './vendor/*' -exec dirname {} \; | sort)
+MODULES := $(shell find . \( -type d \( -name .git -o -name vendor -o -name node_modules \) -prune \) -o \( -name go.mod -exec dirname {} \; \) | sort)
 
 .PHONY: check test
 check:
