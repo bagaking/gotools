@@ -74,11 +74,11 @@ Do not infer ownership from the repository name alone. Check the nearest
 
 ## Validation Contract
 
-`make test` is the repository-level validation contract. It runs `go test ./...`
+`make check` is the repository-level validation contract. It runs `go test ./...`
 once in each module listed by the Makefile:
 
 ```sh
-make test
+make check
 ```
 
 Current module list:
@@ -102,14 +102,16 @@ for module in . annotation csvp fuctx procast reflectool strs; do
 done
 ```
 
-GitHub Actions runs `make test` for pushes and pull requests to `main` or
+`make test` is kept as a compatibility alias for `make check`.
+
+GitHub Actions runs `make check` for pushes and pull requests to `main` or
 `master`. The workflow reads the Go version from the root `go.mod`, currently
 `go 1.15`.
 
-`make test` proves that each committed module test suite passes against that
+`make check` proves that each committed module test suite passes against that
 module's current dependency graph. It does not prove every unpublished
 cross-module edit as an integrated local replacement graph. When a change spans
-modules, validate each touched module during development and run `make test`
+modules, validate each touched module during development and run `make check`
 before review or release.
 
 ## Release and Tagging
@@ -130,7 +132,7 @@ Before tagging:
 
 - confirm the owning module path and changed public API
 - run that module's local `go test ./...`
-- run `make test` from the repository root
+- run `make check` from the repository root
 - check whether downstream nested modules need dependency version updates
 
 ## Cross-Module Caveats

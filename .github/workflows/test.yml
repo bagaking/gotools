@@ -26,5 +26,5 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Test root and nested modules
-        run: make test
+      - name: Check root and nested modules
+        run: make check
