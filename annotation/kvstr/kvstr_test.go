@@ -47,6 +47,19 @@ func TestKVStr_ReflectTo(t *testing.T) {
 	assert.Equal(t, "ok", a.C)
 }
 
+func TestKVStr_ReflectToDoesNotReturnConsumedSnakeCaseKey(t *testing.T) {
+	type A struct {
+		FieldName string
+	}
+	a := &A{}
+
+	extra, err := KVStr("field_name=ok,unused=left").ReflectTo(a)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "ok", a.FieldName)
+	assert.Equal(t, map[string]string{"unused": "left"}, extra)
+}
+
 func TestKVStr_ForEach(t *testing.T) {
 	result := []struct {
 		k string

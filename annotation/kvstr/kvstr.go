@@ -138,12 +138,14 @@ func (kv KVStr) ReflectTo(target interface{}) (extra map[string]string, err erro
 
 	var reflector reflectool.FieldHandler = func(fCtx reflectool.FieldContext) error {
 		str, ok := kvMap[fCtx.Name]
+		usedKey := fCtx.Name
 		if !ok {
 			snake := strs.Conv2Snake(fCtx.Name)
 			str, ok = kvMap[snake]
 			if !ok {
 				return nil
 			}
+			usedKey = snake
 		}
 
 		converted, err := ConvStrToPlainType(str, fCtx.Type)
@@ -153,7 +155,7 @@ func (kv KVStr) ReflectTo(target interface{}) (extra map[string]string, err erro
 
 		val := reflect.ValueOf(converted)
 		fCtx.Value.Set(val)
-		delete(kvMap, fCtx.Name) // todo: check this
+		delete(kvMap, usedKey)
 		return nil
 	}
 
