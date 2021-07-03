@@ -34,9 +34,12 @@ func matchName(names ...string) matchHandler {
 	}
 }
 
-func ignoreFileOrJumpDirByName(match matchHandler, filePath string, searchingRoot string) (bool, error) {
+func ignoreFileOrJumpDirByName(match matchHandler, fi os.FileInfo, filePath string, searchingRoot string) (bool, error) {
 	dir, base := path.Dir(filePath), path.Base(filePath)
 	if match(base) {
+		if fi != nil && fi.IsDir() {
+			return false, filepath.SkipDir
+		}
 		return false, nil
 	}
 

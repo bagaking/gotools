@@ -32,7 +32,7 @@ func FilterIgnoreRegexOfPath(strRegexMatch string) FileFilter {
 func FilterIgnoreNameTableOfFile(names ...string) FileFilter {
 	match := matchName(names...)
 	return func(fi os.FileInfo, filePath string, searchingRoot string) (bool, error) {
-		return ignoreFileOrJumpDirByName(match, filePath, searchingRoot)
+		return ignoreFileOrJumpDirByName(match, fi, filePath, searchingRoot)
 	}
 }
 
@@ -50,7 +50,7 @@ func FilterIgnorePrefixTableOfPath(prefix ...string) FileFilter {
 func FilterIgnorePrefixTableOfFile(prefix ...string) FileFilter {
 	match := matchPrefix(prefix...)
 	return func(fi os.FileInfo, filePath string, searchingRoot string) (bool, error) {
-		return ignoreFileOrJumpDirByName(match, filePath, searchingRoot)
+		return ignoreFileOrJumpDirByName(match, fi, filePath, searchingRoot)
 	}
 }
 
