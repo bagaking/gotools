@@ -83,6 +83,35 @@ func TestCopyFileHardLinkNoOp(t *testing.T) {
 	}
 }
 
+func TestCopyFileWithLinkRemainEnsureDirCreatesParentForSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink creation requires extra privileges on windows")
+	}
+
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.txt")
+	src := filepath.Join(dir, "src-link")
+	dest := filepath.Join(dir, "missing", "dest-link")
+	if err := os.WriteFile(target, []byte("target"), 0644); err != nil {
+		t.Fatalf("os.WriteFile(%q) error = %v", target, err)
+	}
+	if err := os.Symlink(target, src); err != nil {
+		t.Fatalf("os.Symlink(%q, %q) error = %v", target, src, err)
+	}
+
+	if err := CopyFileWithLinkRemain(src, dest, true); err != nil {
+		t.Fatalf("CopyFileWithLinkRemain(%q, %q, true) error = %v", src, dest, err)
+	}
+
+	got, err := os.Readlink(dest)
+	if err != nil {
+		t.Fatalf("os.Readlink(%q) error = %v", dest, err)
+	}
+	if got != target {
+		t.Errorf("CopyFileWithLinkRemain(%q, %q, true) link target = %q, want %q", src, dest, got, target)
+	}
+}
+
 func TestCopyDirReportsWalkErrWithoutPanicWhenContinuing(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "src")

@@ -112,6 +112,11 @@ func CopyFileWithLinkRemain(src, dest string, ensureDir bool) (errRet error) { /
 		if err != nil {
 			return err
 		}
+		if ensureDir {
+			if err = EnsureDirOfFilePth(dest); err != nil {
+				return err
+			}
+		}
 		return os.Symlink(link, dest)
 	}
 
