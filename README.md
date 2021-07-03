@@ -54,9 +54,9 @@ This repository keeps several independently importable modules in one source
 tree. Treat each module directory as the ownership boundary for dependencies,
 version tags, and compatibility review.
 
-| Module directory | Package path | Role | Maturity | Validation |
+| Module directory | Module/package pattern | Role | Maturity | Validation |
 | --- | --- | --- | --- | --- |
-| `.` | `github.com/bagaking/gotools/...` | Root collection for table, file, lane, debug, and worker helpers. | Maintained; broadest package surface. | `go test ./...` from the repository root, or `make test` for the full matrix. |
+| `.` | `github.com/bagaking/gotools/...` | Root collection for table, file, lane, debug, and worker helpers. | Maintained; broadest package surface. | `go test ./...` from the repository root, or `make test` for the module self-test matrix. |
 | `annotation` | `github.com/bagaking/gotools/annotation/...` | Struct annotation and key-value tag parsing helpers. | Maintained submodule; used by parser-style packages. | `cd annotation && go test ./...` |
 | `csvp` | `github.com/bagaking/gotools/csvp` | CSV-to-struct parsing helpers. | Maintained submodule; depends on annotation, reflection, and string helpers. | `cd csvp && go test ./...` |
 | `fuctx` | `github.com/bagaking/gotools/fuctx` | Context lifecycle wrapper with abort, wait, and duration helpers. | Maintained submodule; small API surface. | `cd fuctx && go test ./...` |
@@ -69,6 +69,8 @@ Release and compatibility reviews should start from the module being changed:
 - check the local `go.mod` before adding cross-module dependencies
 - run that module's validation command while iterating
 - run `make test` before opening a pull request or publishing tags
+- remember that `make test` runs each module against its own `go.mod`; it is not
+  a local replacement-graph integration test for unpublished cross-module edits
 - tag nested modules with their full module path when releasing them, for
   example `strs/vX.Y.Z`
 
