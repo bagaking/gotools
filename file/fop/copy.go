@@ -27,22 +27,73 @@ func CopyDir(src string, dest string, mkDir bool, errorStop bool) error {
 	if err := fpth.TestDir(dest); err != nil {
 		return err
 	}
-	return fpth.Walk(src, func(pth string, fi os.FileInfo, err error) error {
-		if err != nil && errorStop {
+	var errs copyDirErrors
+	recordErr := func(err error) error {
+		if err == nil {
+			return nil
+		}
+		if errorStop {
 			return err
+		}
+		errs = append(errs, err)
+		return nil
+	}
+	if err := fpth.Walk(src, func(pth string, fi os.FileInfo, err error) error {
+		if err != nil {
+			return recordErr(fmt.Errorf("walk %s failed: %w", pth, err))
+		}
+		if fi == nil {
+			return recordErr(fmt.Errorf("walk %s failed: nil file info", pth))
 		}
 		newPth := strings.Replace(pth, src, dest, -1)
 		if fi.IsDir() {
-			if err = os.MkdirAll(newPth, os.ModePerm); err != nil && errorStop {
-				return err
+			if err = os.MkdirAll(newPth, os.ModePerm); err != nil {
+				return recordErr(fmt.Errorf("mkdir %s failed: %w", newPth, err))
 			}
 			return nil
 		}
-		if err = CopyFile(pth, newPth, false); err != nil && errorStop {
-			return err
+		if err = CopyFile(pth, newPth, false); err != nil {
+			return recordErr(fmt.Errorf("copy %s to %s failed: %w", pth, newPth, err))
 		}
 		return nil
-	})
+	}); err != nil {
+		if errorStop {
+			return err
+		}
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return errs
+	}
+	return nil
+}
+
+type copyDirErrors []error
+
+func (errs copyDirErrors) Error() string {
+	if len(errs) == 1 {
+		return errs[0].Error()
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "copy dir failed with %d errors:", len(errs))
+	for _, err := range errs {
+		b.WriteString("\n - ")
+		b.WriteString(err.Error())
+	}
+	return b.String()
+}
+
+func (errs copyDirErrors) Is(target error) bool {
+	for _, err := range errs {
+		if errors.Is(err, target) {
+			return true
+		}
+	}
+	return false
+}
+
+func (errs copyDirErrors) Unwrap() []error {
+	return []error(errs)
 }
 
 func CopyFileWithLinkRemain(src, dest string, ensureDir bool) (errRet error) { // todo: test these method with link file
