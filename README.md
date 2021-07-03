@@ -72,6 +72,7 @@ That target runs `go test ./...` in every module:
 If `make` is unavailable, run the same loop directly:
 
 ```sh
+set -e
 for module in . annotation csvp fuctx procast reflectool strs; do
   (cd "$module" && go test ./...)
 done
