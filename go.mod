@@ -1,6 +1,6 @@
 module github.com/bagaking/gotools
 
-go 1.15
+go 1.16
 
 require (
 	github.com/bagaking/gotools/procast v0.0.0

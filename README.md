@@ -105,8 +105,12 @@ done
 `make test` is kept as a compatibility alias for `make check`.
 
 GitHub Actions runs `make check` for pushes and pull requests to `main` or
-`master`. The workflow reads the Go version from the root `go.mod`, currently
-`go 1.15`.
+`master`. The workflow reads the Go version from the root `go.mod`.
+
+The root module declares `go 1.16` because root-owned packages use Go 1.16
+standard library APIs, including `io/fs` and `filepath.WalkDir`. Nested modules
+keep their own Go version declarations in their nearest `go.mod`; changing the
+root declaration does not change those module boundaries.
 
 `make check` proves that each committed module test suite passes against that
 module's current dependency graph. It does not prove every unpublished
