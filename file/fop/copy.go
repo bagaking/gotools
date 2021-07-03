@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/bagaking/gotools/file/fpth"
@@ -45,7 +46,11 @@ func CopyDir(src string, dest string, mkDir bool, errorStop bool) error {
 		if fi == nil {
 			return recordErr(fmt.Errorf("walk %s failed: nil file info", pth))
 		}
-		newPth := strings.Replace(pth, src, dest, -1)
+		rel, err := filepath.Rel(src, pth)
+		if err != nil {
+			return recordErr(fmt.Errorf("map %s relative to %s failed: %w", pth, src, err))
+		}
+		newPth := filepath.Join(dest, rel)
 		if fi.IsDir() {
 			if err = os.MkdirAll(newPth, os.ModePerm); err != nil {
 				return recordErr(fmt.Errorf("mkdir %s failed: %w", newPth, err))

@@ -137,6 +137,35 @@ func TestCopyDirReportsNilFileInfoWithoutPanicWhenContinuing(t *testing.T) {
 	}
 }
 
+func TestCopyDirMapsPathsByRelativePath(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dest := filepath.Join(dir, "dest")
+	nested := filepath.Join(src, "nested", "src", "file.txt")
+	if err := os.MkdirAll(filepath.Dir(nested), 0755); err != nil {
+		t.Fatalf("os.MkdirAll(%q) error = %v", filepath.Dir(nested), err)
+	}
+	if err := os.Mkdir(dest, 0755); err != nil {
+		t.Fatalf("os.Mkdir(%q) error = %v", dest, err)
+	}
+	if err := os.WriteFile(nested, []byte("content"), 0644); err != nil {
+		t.Fatalf("os.WriteFile(%q) error = %v", nested, err)
+	}
+
+	if err := CopyDir(src, dest, false, true); err != nil {
+		t.Fatalf("CopyDir(%q, %q, false, true) error = %v", src, dest, err)
+	}
+
+	wantPath := filepath.Join(dest, "nested", "src", "file.txt")
+	got, err := os.ReadFile(wantPath)
+	if err != nil {
+		t.Fatalf("os.ReadFile(%q) error = %v", wantPath, err)
+	}
+	if string(got) != "content" {
+		t.Errorf("CopyDir(%q, %q, false, true) copied %q, want %q", src, dest, string(got), "content")
+	}
+}
+
 func TestCopyDirContinuesAndReturnsCopyErrors(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("chmod permissions are not enforced the same way on windows")
