@@ -1,4 +1,4 @@
-MODULES := . annotation csvp fuctx procast reflectool strs
+MODULES := $(shell find . -name go.mod ! -path './.git/*' ! -path './vendor/*' -exec dirname {} \; | sort)
 
 .PHONY: check test
 check:
